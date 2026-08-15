@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      DJANGO_SECRET_KEY: test-only-secret-key
+      TEST_DATABASE_ENGINE: postgresql
+      EXPECTED_DATABASE_VENDOR: postgresql
+      POSTGRES_DB: employee_management_test
+      POSTGRES_USER: employee_app
+      POSTGRES_PASSWORD: test-only-password
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: employee_management_test
+          POSTGRES_USER: employee_app
+          POSTGRES_PASSWORD: test-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U employee_app -d employee_management_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements/development.txt
+      - run: python -m pip install -r requirements/development.txt
+      - run: python -m ruff format --check --no-cache .
+      - run: python -m ruff check --no-cache .
+      - run: python manage.py check --settings=config.settings.test
+      - run: python manage.py migrate --noinput --settings=config.settings.test
+      - run: python -m pytest
+
+  flutter_analyze_and_test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/employee_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: flutter analyze
+      - run: flutter test
+
+  android_debug_build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/employee_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter create --platforms=android --org com.yourcompany --project-name employee_app .
+      - run: flutter pub get
+      - run: flutter build apk --debug --dart-define-from-file=../../config/dev.android-emulator.json
+
+  windows_debug_build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: apps/employee_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter create --platforms=windows --org com.yourcompany --project-name employee_app .
+      - run: flutter pub get
+      - run: flutter build windows --debug --dart-define-from-file=../../config/dev.windows.json

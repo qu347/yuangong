@@ -1,0 +1,4 @@
+{
+  "APP_ENV": "development",
+  "API_BASE_URL": "http://YOUR_COMPUTER_LAN_IP:8000/api/v1"
+}

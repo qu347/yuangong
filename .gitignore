@@ -1,0 +1,65 @@
+# Flutter and Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+.fvm/
+build/
+**/android/.gradle/
+**/android/local.properties
+**/windows/flutter/ephemeral/
+**/windows/x64/
+
+# Python
+.venv/
+**/.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+key.properties
+*.p12
+*.pem
+*.key
+
+# Local databases and runtime files
+*.sqlite3
+*.db
+*.log
+*.tmp
+tmp/
+temp/
+.docker-data/
+docker-data/
+data/postgres/
+data/redis/
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.iml
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.DS_Store
+Thumbs.db
+
+# Test and build artifacts
+coverage/
+test-results/
+*.apk
+*.aab
+*.msix
