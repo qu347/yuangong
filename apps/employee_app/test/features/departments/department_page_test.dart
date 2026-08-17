@@ -25,7 +25,7 @@ const pageDepartments = [
   ),
 ];
 
-class PageDepartmentRepository implements DepartmentRepository {
+class PageDepartmentRepository extends DepartmentRepository {
   final responses = <Object>[];
   int requestCount = 0;
 

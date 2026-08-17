@@ -38,10 +38,13 @@ class IntegrationAuthRepository implements AuthRepository {
   Future<void> logout() async {}
 
   @override
+  Future<int> logoutAll() async => 0;
+
+  @override
   Future<CurrentUser?> restoreSession() async => integrationUser;
 }
 
-class IntegrationEmployeeRepository implements EmployeeRepository {
+class IntegrationEmployeeRepository extends EmployeeRepository {
   @override
   Future<Employee> fetchEmployee(String id) => throw UnimplementedError();
 
@@ -57,7 +60,7 @@ class IntegrationEmployeeRepository implements EmployeeRepository {
       const EmployeePage(count: 0, next: null, previous: null, results: []);
 }
 
-class IntegrationDepartmentRepository implements DepartmentRepository {
+class IntegrationDepartmentRepository extends DepartmentRepository {
   @override
   Future<List<Department>> fetchDepartments() async => const [];
 }

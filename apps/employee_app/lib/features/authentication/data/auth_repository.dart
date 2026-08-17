@@ -25,6 +25,7 @@ abstract interface class AuthRepository {
 
   Future<CurrentUser?> restoreSession();
   Future<void> logout();
+  Future<int> logoutAll();
 }
 
 class NetworkAuthRepository implements AuthRepository {
@@ -92,6 +93,7 @@ class NetworkAuthRepository implements AuthRepository {
       AppExceptionType.unauthorized => const Failure.authentication(),
       AppExceptionType.forbidden => const Failure.permission(),
       AppExceptionType.validation => const Failure.validation(),
+      AppExceptionType.conflict => const Failure.conflict(),
       AppExceptionType.protocol => const Failure.service(),
       AppExceptionType.unexpected => const Failure(
         type: FailureType.unexpected,
@@ -101,5 +103,38 @@ class NetworkAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> logout() => _tokenStorage.clear();
+  Future<void> logout() async {
+    final refreshToken = await _tokenStorage.readRefreshToken();
+    try {
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        await _apiClient.postVoid(
+          ApiEndpoints.logout,
+          data: {'refresh': refreshToken},
+        );
+      }
+    } on Object {
+      // Local logout must complete even if the server cannot revoke the refresh token.
+    } finally {
+      await _tokenStorage.clear();
+    }
+  }
+
+  @override
+  Future<int> logoutAll() async {
+    try {
+      final payload = await _apiClient.postMap(
+        ApiEndpoints.logoutAll,
+        data: const {},
+      );
+      final revokedSessions = payload['revoked_sessions'];
+      if (revokedSessions is! int || revokedSessions < 0) {
+        throw const FormatException('invalid revoked session count');
+      }
+      return revokedSessions;
+    } on AppException catch (error) {
+      throw _failureFor(error);
+    } on FormatException {
+      throw const Failure.data();
+    }
+  }
 }

@@ -27,6 +27,7 @@ class CurrentUser {
     required this.employeeNo,
     required this.department,
     required this.roles,
+    this.capabilities = const UserCapabilities.none(),
   });
 
   final String id;
@@ -36,15 +37,20 @@ class CurrentUser {
   final String? employeeNo;
   final CurrentUserDepartment? department;
   final List<String> roles;
+  final UserCapabilities capabilities;
 
   factory CurrentUser.fromJson(Map<String, dynamic> json) {
     final departmentJson = json['department'];
     final rolesJson = json['roles'];
+    final capabilitiesJson = json['capabilities'];
     if (departmentJson != null && departmentJson is! Map<String, dynamic>) {
       throw const FormatException('invalid current user department');
     }
     if (rolesJson is! List || rolesJson.any((role) => role is! String)) {
       throw const FormatException('invalid current user roles');
+    }
+    if (capabilitiesJson != null && capabilitiesJson is! Map<String, dynamic>) {
+      throw const FormatException('invalid current user capabilities');
     }
     return CurrentUser(
       id: _requiredString(json, 'id'),
@@ -58,6 +64,56 @@ class CurrentUser {
               departmentJson as Map<String, dynamic>,
             ),
       roles: List<String>.unmodifiable(rolesJson.cast<String>()),
+      capabilities: capabilitiesJson == null
+          ? const UserCapabilities.none()
+          : UserCapabilities.fromJson(capabilitiesJson as Map<String, dynamic>),
+    );
+  }
+}
+
+class UserCapabilities {
+  const UserCapabilities({
+    required this.canManageEmployees,
+    required this.canManageDepartments,
+    required this.canManagePositions,
+    required this.canViewAudit,
+    required this.canLogoutAll,
+  });
+
+  const UserCapabilities.none()
+    : canManageEmployees = false,
+      canManageDepartments = false,
+      canManagePositions = false,
+      canViewAudit = false,
+      canLogoutAll = false;
+
+  final bool canManageEmployees;
+  final bool canManageDepartments;
+  final bool canManagePositions;
+  final bool canViewAudit;
+  final bool canLogoutAll;
+
+  bool get canManageDirectory =>
+      canManageEmployees || canManageDepartments || canManagePositions;
+
+  factory UserCapabilities.fromJson(Map<String, dynamic> json) {
+    bool readCapability(String key) {
+      final value = json[key];
+      if (value == null) {
+        return false;
+      }
+      if (value is! bool) {
+        throw FormatException('invalid capability $key');
+      }
+      return value;
+    }
+
+    return UserCapabilities(
+      canManageEmployees: readCapability('can_manage_employees'),
+      canManageDepartments: readCapability('can_manage_departments'),
+      canManagePositions: readCapability('can_manage_positions'),
+      canViewAudit: readCapability('can_view_audit'),
+      canLogoutAll: readCapability('can_logout_all'),
     );
   }
 }

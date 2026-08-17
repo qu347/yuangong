@@ -223,6 +223,35 @@ class ApiClient {
     }
   }
 
+  Future<Map<String, dynamic>> patchMap(String path, {Object? data}) async {
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(path, data: data);
+      final payload = response.data;
+      if (payload == null) {
+        throw const AppException.protocol('empty response');
+      }
+      return payload;
+    } on DioException catch (error) {
+      throw _mapDioException(path, error);
+    }
+  }
+
+  Future<void> postVoid(
+    String path, {
+    Object? data,
+    bool authenticated = true,
+  }) async {
+    try {
+      await _dio.post<void>(
+        path,
+        data: data,
+        options: Options(extra: {_skipAuthKey: !authenticated}),
+      );
+    } on DioException catch (error) {
+      throw _mapDioException(path, error);
+    }
+  }
+
   AppException _mapDioException(String path, DioException error) {
     _logger.w(
       'API request failed: path=$path type=${error.type.name} '
@@ -236,9 +265,17 @@ class ApiClient {
       400 => const AppException.validation('validation failed'),
       401 => const AppException.unauthorized('authentication required'),
       403 => const AppException.forbidden('permission denied'),
+      409 => AppException.conflict(_safeErrorCode(error.response?.data)),
       503 => const AppException.protocol('service unavailable'),
       _ => const AppException.network('request failed'),
     };
+  }
+
+  String _safeErrorCode(Object? payload) {
+    if (payload case {'code': final String code}) {
+      return code;
+    }
+    return 'conflict';
   }
 
   void close() {

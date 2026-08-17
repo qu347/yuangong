@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/failure.dart';
 import '../../../core/widgets/app_error_view.dart';
 import '../../../core/widgets/app_loading_view.dart';
+import '../../authentication/presentation/auth_session_store.dart';
 import '../data/department.dart';
 import 'department_controller.dart';
 
@@ -13,6 +15,7 @@ class DepartmentPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final departments = ref.watch(departmentControllerProvider);
+    final capabilities = ref.watch(authSessionStoreProvider).capabilities;
 
     return SafeArea(
       child: Padding(
@@ -38,6 +41,24 @@ class DepartmentPage extends ConsumerWidget {
                     ],
                   ),
                 ),
+                if (capabilities.canManagePositions) ...[
+                  FilledButton.tonalIcon(
+                    key: const Key('position_manage_entry'),
+                    onPressed: () => context.go('/positions/manage'),
+                    icon: const Icon(Icons.work_outline_rounded),
+                    label: const Text('岗位管理'),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                if (capabilities.canManageDepartments) ...[
+                  FilledButton.icon(
+                    key: const Key('department_manage_entry'),
+                    onPressed: () => context.go('/departments/manage'),
+                    icon: const Icon(Icons.settings_outlined),
+                    label: const Text('部门管理'),
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 IconButton.filledTonal(
                   tooltip: '刷新部门目录',
                   onPressed: () =>

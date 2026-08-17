@@ -37,6 +37,28 @@ class Department {
   }
 }
 
+class DepartmentActionResult {
+  const DepartmentActionResult({
+    required this.department,
+    required this.changed,
+  });
+
+  final Department department;
+  final bool changed;
+
+  factory DepartmentActionResult.fromJson(Map<String, dynamic> json) {
+    final departmentJson = json['department'];
+    final changed = json['changed'];
+    if (departmentJson is! Map<String, dynamic> || changed is! bool) {
+      throw const FormatException('invalid department action result');
+    }
+    return DepartmentActionResult(
+      department: Department.fromJson(departmentJson),
+      changed: changed,
+    );
+  }
+}
+
 String _requiredString(Map<String, dynamic> json, String key) {
   final value = json[key];
   if (value is! String || value.isEmpty) {

@@ -3,6 +3,7 @@ enum AppExceptionType {
   unauthorized,
   forbidden,
   validation,
+  conflict,
   protocol,
   unexpected,
 }
@@ -15,6 +16,7 @@ class AppException implements Exception {
     : type = AppExceptionType.forbidden;
   const AppException.validation(this.message)
     : type = AppExceptionType.validation;
+  const AppException.conflict(this.message) : type = AppExceptionType.conflict;
   const AppException.protocol(this.message) : type = AppExceptionType.protocol;
   const AppException.unexpected(this.message)
     : type = AppExceptionType.unexpected;

@@ -80,6 +80,35 @@ Dio dioWith(RecordingAdapter adapter) {
 }
 
 void main() {
+  test('supports PATCH maps and 204 action responses', () async {
+    final storage = MemoryTokenStorage(accessToken: 'access-test-value');
+    final adapter = RecordingAdapter((options) async {
+      if (options.method == 'PATCH') {
+        return jsonResponse(200, {'name': '更新名称'});
+      }
+      return ResponseBody.fromString('', 204);
+    });
+    final client = ApiClient(
+      baseUrl: 'https://api.example.test/api/v1/',
+      tokenStorage: storage,
+      dio: dioWith(adapter),
+      refreshDio: dioWith(RecordingAdapter((_) async => jsonResponse(500, {}))),
+    );
+    addTearDown(client.close);
+
+    final patched = await client.patchMap(
+      'employees/employee-id/',
+      data: {'full_name': '更新名称'},
+    );
+    await client.postVoid('employees/employee-id/depart/', data: const {});
+
+    expect(patched, {'name': '更新名称'});
+    expect(adapter.requests.map((request) => request.method), [
+      'PATCH',
+      'POST',
+    ]);
+  });
+
   test(
     'injects the stored access token without logging request data',
     () async {
