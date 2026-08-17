@@ -395,7 +395,7 @@ Build Debug with `dev.android-emulator.json`, install on `employee_api36`, valid
 
 Run `git diff --check`, review every changed/untracked path, scan names and staged content without printing values, and confirm no env, credential, token, real employee data, build artifact, cache, local.properties or Docker data is staged.
 
-- [ ] **Step 6: Create logical commits after all gates pass**
+- [x] **Step 6: Create logical commits after all gates pass**
 
 Stage reviewed file sets and create up to four commits:
 
@@ -408,7 +408,7 @@ docs: document employee directory MVP
 
 Combine test files with their feature commit if that preserves a clearer red/green change; do not amend, push, or rebase.
 
-- [ ] **Step 7: Post-commit verification**
+- [x] **Step 7: Post-commit verification**
 
 Confirm clean status, branch `feature/employee-directory-mvp`, preserved `44adc69` and `6102448`, new traceable commits, zero remotes, and no push.
 
