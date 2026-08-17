@@ -1,6 +1,6 @@
 # 企业员工管理系统
 
-面向企业内部员工的 Windows 与 Android 管理客户端基础工程。本仓库当前只提供可扩展的工程骨架、模块边界和前后端健康检查，不包含完整员工管理业务。
+面向企业内部员工的 Windows 与 Android 管理客户端。本仓库已实现第一期“身份认证与员工目录”最小纵向切片，不包含完整人力资源管理业务。
 
 ## 平台范围
 
@@ -14,9 +14,19 @@
 ## 技术栈
 
 - 客户端：Flutter stable、Dart、Material 3、Riverpod、go_router、Dio、flutter_secure_storage
-- 后端：Python 3.12、Django 5.2.x、Django REST Framework、drf-spectacular、pytest、Ruff
+- 后端：Python 3.12、Django 5.2.x、Django REST Framework、SimpleJWT、drf-spectacular、pytest、Ruff
 - 基础设施：PostgreSQL 17、Redis 8（预留）、Docker Compose
 - 协作：GitHub Actions、Pull Request 模板、ADR
+
+## 第一期功能
+
+- JWT 登录、刷新、当前用户和退出登录。
+- 只读部门、岗位和员工目录。
+- 员工姓名/工号/工作邮箱搜索，部门和在职状态筛选，受限分页与排序。
+- Windows 宽屏表格、Android 紧凑卡片、员工详情和部门层级。
+- Django Admin 管理入口和幂等虚构演示数据命令。
+
+本期不包含员工写入页面、考勤、审批、薪资、招聘、上传、多租户或第三方身份源。
 
 ## 目录结构
 
@@ -74,8 +84,30 @@ powershell -ExecutionPolicy Bypass -File .\scripts\run-backend.ps1
 可用端点：
 
 - `GET http://127.0.0.1:8000/api/v1/health/`
+- `POST http://127.0.0.1:8000/api/v1/auth/login/`
+- `POST http://127.0.0.1:8000/api/v1/auth/refresh/`
+- `GET http://127.0.0.1:8000/api/v1/me/`
+- `GET http://127.0.0.1:8000/api/v1/departments/`
+- `GET http://127.0.0.1:8000/api/v1/positions/`
+- `GET http://127.0.0.1:8000/api/v1/employees/`
 - `GET http://127.0.0.1:8000/api/schema/`
 - `GET http://127.0.0.1:8000/api/docs/`
+
+## 初始化虚构演示数据
+
+先把自选开发密码放入当前 PowerShell 进程，不要写入命令、文档或 Git：
+
+```powershell
+$securePassword = Read-Host "演示账号密码" -AsSecureString
+$env:EMPLOYEE_DEMO_PASSWORD = [System.Net.NetworkCredential]::new("", $securePassword).Password
+try {
+  .\backend\.venv\Scripts\python.exe .\backend\manage.py seed_demo_data
+} finally {
+  Remove-Item Env:EMPLOYEE_DEMO_PASSWORD -ErrorAction SilentlyContinue
+}
+```
+
+命令可重复执行，不会重复创建数据。开发登录名固定为 `demo.employee`；正式登录标识仍是发布前未决事项。完整说明见 [docs/employee-directory-mvp.md](docs/employee-directory-mvp.md)。
 
 ## 启动 Windows 客户端
 
@@ -161,4 +193,4 @@ flutter build apk --debug --dart-define-from-file=../../config/dev.android-emula
 
 ## 下一步
 
-先确认 [docs/OPEN_DECISIONS.md](docs/OPEN_DECISIONS.md) 中的发布前事项，再按 [docs/next-steps.md](docs/next-steps.md) 推进认证、组织架构与员工档案。不得在登录标识和权限边界未确认前实现完整业务。
+先确认 [docs/OPEN_DECISIONS.md](docs/OPEN_DECISIONS.md) 中的发布前事项，再按 [docs/next-steps.md](docs/next-steps.md) 推进 HR 管理员员工维护、部门与岗位维护、操作审计和更细 RBAC。不要直接跳到考勤、审批或薪资。

@@ -33,6 +33,22 @@ $env:EXPECTED_DATABASE_VENDOR = "postgresql"
 
 开发服务器监听 `0.0.0.0:8000` 仅用于受信任局域网。
 
+## 演示账号与目录数据
+
+`seed_demo_data` 幂等创建 4 个部门、6 个岗位、12 名虚构员工和三类 Group。密码必须来自当前进程 `EMPLOYEE_DEMO_PASSWORD`，命令不会输出该值：
+
+```powershell
+$securePassword = Read-Host "演示账号密码" -AsSecureString
+$env:EMPLOYEE_DEMO_PASSWORD = [System.Net.NetworkCredential]::new("", $securePassword).Password
+try {
+  .\.venv\Scripts\python.exe manage.py seed_demo_data
+} finally {
+  Remove-Item Env:EMPLOYEE_DEMO_PASSWORD -ErrorAction SilentlyContinue
+}
+```
+
+开发登录名为 `demo.employee`。`employee`、`hr_admin`、`system_admin` 本阶段都能读取目录；目录写 API 不存在。Django Admin 仍要求 `is_staff` 或超级用户。
+
 ## Flutter 配置
 
 - Windows：`config/dev.windows.json`

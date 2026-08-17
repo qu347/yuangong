@@ -8,9 +8,22 @@
 - 成功响应不返回调试信息、内部异常或堆栈。
 - 健康检查不返回数据库主机、用户名或密码。
 
-## 分页预留
+## 认证与目录端点
 
-列表接口未来统一使用 `page` 与 `page_size` 请求参数，响应预留 `count`、`next`、`previous`、`results`。正式业务实现前需通过 API 评审确认最大页大小。
+- `POST /api/v1/auth/login/` 与 `POST /api/v1/auth/refresh/` 公开。
+- `GET /api/v1/me/`、部门、岗位和员工目录要求 Bearer JWT。
+- `health`、OpenAPI schema 和 docs 保持公开；目录写 API本阶段不提供。
+
+## 分页
+
+员工列表使用 `page` 与 `page_size`，响应为 `count`、`next`、`previous`、`results`。默认页大小 20，最大 100，越界返回 400。
+
+员工列表查询参数：
+
+- `search`：姓名、工号、工作邮箱包含搜索。
+- `department`：部门 UUID。
+- `status`：`active` 或 `departed`。
+- `ordering`：只允许 `employee_no`、`full_name`、`hire_date`、`created_at` 及倒序形式。
 
 ## 错误
 
