@@ -45,7 +45,7 @@ Android 的本地 HTTP 只由 `android/app/src/debug/AndroidManifest.xml` 引用
 
 ## 平台生成文件
 
-仓库创建环境缺少 Flutter。安装指定 SDK 后执行：
+Android、Windows 平台工程和依赖锁文件已经生成并提交。日常开发不得重复运行 `flutter create`；仅在明确需要重新生成平台文件时执行：
 
 ```powershell
 cd apps\employee_app
@@ -53,4 +53,4 @@ flutter create --platforms=android,windows --org com.yourcompany --project-name 
 flutter pub get
 ```
 
-确认命令没有新增 iOS、Web、macOS 或 Linux 目录，并审查平台文件差异。
+执行前后都要审查工作区，确认命令没有新增 iOS、Web、macOS 或 Linux 目录，也没有覆盖业务实现。

@@ -99,7 +99,10 @@ class AdaptiveShell extends StatelessWidget {
                                 SizedBox(width: 12),
                                 Text(
                                   '员工管理',
-                                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 18,
+                                  ),
                                 ),
                               ],
                             )

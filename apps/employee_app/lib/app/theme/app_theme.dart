@@ -24,10 +24,7 @@ abstract final class AppTheme {
           fontWeight: FontWeight.w700,
           letterSpacing: -0.5,
         ),
-        titleLarge: TextStyle(
-          color: _ink,
-          fontWeight: FontWeight.w700,
-        ),
+        titleLarge: TextStyle(color: _ink, fontWeight: FontWeight.w700),
         bodyLarge: TextStyle(color: Color(0xFF344542), height: 1.55),
       ),
       cardTheme: CardThemeData(
@@ -57,7 +54,9 @@ abstract final class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size(96, 44),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
     );

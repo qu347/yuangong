@@ -7,9 +7,38 @@ import pytest
 from django.db import connection
 
 
+def _minimal_subprocess_environment():
+    return {
+        name: os.environ[name]
+        for name in ("PATH", "SYSTEMROOT", "TEMP", "TMP")
+        if name in os.environ
+    }
+
+
+def test_base_settings_exposes_redis_url_from_environment():
+    """Catches Docker Redis configuration being ignored by Django settings."""
+    environment = _minimal_subprocess_environment()
+    environment["REDIS_URL"] = "redis://redis-test:6380/4"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from config.settings.base import REDIS_URL; print(REDIS_URL)",
+        ],
+        cwd=os.path.dirname(os.path.dirname(__file__)),
+        env=environment,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.stdout.strip() == "redis://redis-test:6380/4"
+
+
 def test_test_settings_use_postgresql_environment_when_requested():
     """Catches CI starting PostgreSQL while Django silently keeps using SQLite."""
-    environment = os.environ.copy()
+    environment = _minimal_subprocess_environment()
     environment.update(
         {
             "TEST_DATABASE_ENGINE": "postgresql",

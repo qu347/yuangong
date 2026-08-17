@@ -11,8 +11,8 @@ class FlutterDeviceService implements DeviceService {
 
   @override
   DevicePlatform get platform => switch (defaultTargetPlatform) {
-        TargetPlatform.android => DevicePlatform.android,
-        TargetPlatform.windows => DevicePlatform.windows,
-        _ => DevicePlatform.unsupported,
-      };
+    TargetPlatform.android => DevicePlatform.android,
+    TargetPlatform.windows => DevicePlatform.windows,
+    _ => DevicePlatform.unsupported,
+  };
 }

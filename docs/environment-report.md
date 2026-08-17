@@ -1,6 +1,8 @@
 # Windows 开发缓存与 SDK 迁移报告
 
-检查日期：2026-08-15
+缓存迁移检查日期：2026-08-15
+
+员工项目复验日期：2026-08-17
 工作区：`D:\员工管理`
 隐私：不记录用户名、计算机名、代理值、密码、Token、局域网详情或真实员工数据。所有命令结果仅使用 `PASSED`、`FAILED`、`NOT RUN`。
 
@@ -202,7 +204,23 @@ AVD 未删除，最终仍为 ADB `device` 状态。
 
 ## 19. 是否满足默认开发环境完成条件
 
-- 状态：PASSED
-- 结论：**满足“默认开发环境配置完成”条件。**
+- 状态：PASSED WITH WARNINGS
+- 结论：**持久用户配置满足默认开发条件；当前员工项目的 Pub 生成元数据仍需在正确继承用户变量的终端中刷新。**
 
-Flutter、Gradle、Android SDK、Pub Cache、AVD、Windows 构建、Docker Engine/Compose 与真实 Android 安装运行均已在持久默认环境通过。三个 C 盘旧缓存/SDK 原路径未重建，项目 `pubspec.lock` 不存在，未修改员工管理业务代码，未创建 Git commit。
+Flutter、Gradle、Android SDK、AVD、Windows 构建、Docker Engine/Compose 与真实 Android 安装运行均通过。2026-08-17 发现 Codex 宿主进程未继承持久 `PUB_CACHE`，项目 `.dart_tool/package_config.json` 的 97 个 Pub 包仍引用 C 盘并重新创建了该缓存；该生成目录不提交 Git。本轮按用户要求没有重复 `flutter pub get`，因此不再维持“C 盘 Pub Cache 原路径未重建”的旧结论。
+
+## 20. 员工项目完整复验（2026-08-17）
+
+| 检查 | 状态 | 结果 |
+| --- | --- | --- |
+| 持久 D 盘变量 | PASSED | `GRADLE_USER_HOME`、`PUB_CACHE`、`ANDROID_HOME`、`ANDROID_AVD_HOME` 仍分别指向已记录的 D 盘目录 |
+| 临时代理/离线构建 | PASSED | 用户级与验收进程的代理相关变量为 `UNSET`；Android 构建未使用离线参数、隔离 Gradle 或人工 Maven 缓存 |
+| Windows 项目构建与运行 | PASSED WITH WARNINGS | EXE 983,040 字节；进程和窗口通过；构建使用进程级 `TrackFileAccess=false` 绕过本机 FileTracker 挂起 |
+| Android 项目构建与运行 | PASSED WITH WARNINGS | APK 165,290,276 字节；`employee_api36` 上 PID 与 resumed Activity 通过；首次 `am start -W` 等待超时但应用保持正常 |
+| Docker Compose | PASSED | PostgreSQL、Redis healthy，Django API running；未删除卷 |
+| PostgreSQL / Redis | PASSED | SQL 返回 `1`；CLI 与 Django Redis 探针均为 `PONG`；Django vendor 为 `postgresql` |
+| Django | PASSED | 无迁移差异、migrate 幂等、SQLite 与 PostgreSQL 模式 pytest 都为 9/9，三个 HTTP 端点均为 200 |
+| `scripts/check.ps1` | PASSED | 提交前复验为 2026-08-17 10:52:44 至 10:53:08，24.2 秒，退出码 0；Compose 配置静默校验 |
+| Pub 项目元数据 | PASSED WITH WARNINGS | 持久用户变量正确，但项目 97 个生成引用仍指向 C 盘；C 盘缓存为 9,877 个文件、154,872,143 字节 |
+
+完整项目级命令、产物哈希、进程、协议和 Git 结果见 `docs/project-bootstrap-validation-report.md`。

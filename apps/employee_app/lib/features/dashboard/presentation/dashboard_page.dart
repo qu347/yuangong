@@ -65,9 +65,7 @@ class _ModuleNotice extends StatelessWidget {
         children: [
           Icon(Icons.construction_outlined, color: Color(0xFF526763)),
           SizedBox(width: 14),
-          Expanded(
-            child: Text('通讯录、考勤、审批、公告与个人中心已建立模块边界，业务功能将在后续迭代中开发。'),
-          ),
+          Expanded(child: Text('通讯录、考勤、审批、公告与个人中心已建立模块边界，业务功能将在后续迭代中开发。')),
         ],
       ),
     );

@@ -53,7 +53,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap.ps1
 
 脚本会检查工具、在缺少时从 `.env.example` 创建仅用于开发的 `.env`、创建 `backend/.venv`、安装依赖、启动 PostgreSQL/Redis、执行迁移、解析 Flutter 依赖并运行基础检查。它不会覆盖现有 `.env`，也不会删除 Docker 卷。
 
-当前工作区创建时缺少 Flutter，因此没有伪造 `pubspec.lock`。安装 Flutter 后必须运行：
+Android、Windows 平台工程和 `pubspec.lock` 已由本机 Flutter SDK 生成并纳入版本控制。日常开发不需要重复运行 `flutter create`；只有明确要重新生成平台文件时，才在审查现有改动后执行：
 
 ```powershell
 cd apps\employee_app
@@ -61,7 +61,7 @@ flutter create --platforms=android,windows --org com.yourcompany --project-name 
 flutter pub get
 ```
 
-执行 `flutter create` 前请先保存或检查当前改动；命令用于补齐标准生成文件，不得增加其他平台。
+该命令只允许生成 Android 与 Windows；执行前后必须审查差异，不得增加其他平台或覆盖业务实现。
 
 ## 启动后端
 

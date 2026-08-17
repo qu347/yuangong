@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('uses bottom navigation below the desktop breakpoint', (tester) async {
+  testWidgets('uses bottom navigation below the desktop breakpoint', (
+    tester,
+  ) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(800, 700);
     addTearDown(() {
@@ -25,7 +27,9 @@ void main() {
     expect(find.byType(NavigationRail), findsNothing);
   });
 
-  testWidgets('uses a navigation rail at the desktop breakpoint', (tester) async {
+  testWidgets('uses a navigation rail at the desktop breakpoint', (
+    tester,
+  ) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(1200, 800);
     addTearDown(() {

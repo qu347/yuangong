@@ -36,9 +36,9 @@ void main() {
   });
 
   test('converts a network exception into a user-safe failure', () async {
-    when(() => apiClient.getMap(ApiEndpoints.health)).thenThrow(
-      const AppException.network('socket details'),
-    );
+    when(
+      () => apiClient.getMap(ApiEndpoints.health),
+    ).thenThrow(const AppException.network('socket details'));
 
     expect(
       repository.fetchHealth,

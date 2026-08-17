@@ -11,20 +11,18 @@ final apiClientProvider = Provider<ApiClient>((ref) {
 });
 
 class ApiClient {
-  ApiClient({
-    required String baseUrl,
-    Dio? dio,
-    Logger? logger,
-  })  : _dio = dio ??
-            Dio(
-              BaseOptions(
-                baseUrl: baseUrl,
-                connectTimeout: const Duration(seconds: 8),
-                receiveTimeout: const Duration(seconds: 8),
-                headers: const {'Accept': 'application/json'},
-              ),
+  ApiClient({required String baseUrl, Dio? dio, Logger? logger})
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              baseUrl: baseUrl,
+              connectTimeout: const Duration(seconds: 8),
+              receiveTimeout: const Duration(seconds: 8),
+              headers: const {'Accept': 'application/json'},
             ),
-        _logger = logger ?? Logger();
+          ),
+      _logger = logger ?? Logger();
 
   final Dio _dio;
   final Logger _logger;

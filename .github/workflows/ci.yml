@@ -83,7 +83,6 @@ jobs:
         with:
           channel: stable
           cache: true
-      - run: flutter create --platforms=android --org com.yourcompany --project-name employee_app .
       - run: flutter pub get
       - run: flutter build apk --debug --dart-define-from-file=../../config/dev.android-emulator.json
 
@@ -98,6 +97,5 @@ jobs:
         with:
           channel: stable
           cache: true
-      - run: flutter create --platforms=windows --org com.yourcompany --project-name employee_app .
       - run: flutter pub get
       - run: flutter build windows --debug --dart-define-from-file=../../config/dev.windows.json

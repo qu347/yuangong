@@ -1,0 +1,15 @@
+**
+
+!backend/
+!backend/**
+!deploy/
+!deploy/backend/
+!deploy/backend/Dockerfile.dev
+!deploy/backend/entrypoint.sh
+
+backend/.env*
+backend/.venv/
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/**/__pycache__/
+backend/**/*.pyc

@@ -6,6 +6,7 @@ $BackendRoot = Join-Path $RepositoryRoot "backend"
 $FlutterRoot = Join-Path $RepositoryRoot "apps\employee_app"
 $ComposeFile = Join-Path $RepositoryRoot "deploy\docker-compose.dev.yml"
 . (Join-Path $PSScriptRoot "python-command.ps1")
+. (Join-Path $PSScriptRoot "flutter-analysis.ps1")
 
 function Assert-Command {
     param([Parameter(Mandatory = $true)][string]$Name)
@@ -36,7 +37,9 @@ $PythonPrefixArguments = @($PythonCommand.PrefixArguments)
 Push-Location $FlutterRoot
 try {
     Invoke-Checked "Dart format check" { dart format --output=none --set-exit-if-changed . }
-    Invoke-Checked "Flutter analyze" { flutter analyze }
+    Invoke-Checked "Flutter analyze" {
+        Invoke-ProjectFlutterAnalyze -RepositoryRoot $RepositoryRoot
+    }
     Invoke-Checked "Flutter test" { flutter test }
 } finally {
     Pop-Location
@@ -53,5 +56,5 @@ try {
 }
 
 Invoke-Checked "Docker Compose config validation" {
-    docker compose -f $ComposeFile config
+    docker compose -f $ComposeFile config --quiet
 }

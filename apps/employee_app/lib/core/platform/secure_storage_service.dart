@@ -8,7 +8,7 @@ abstract interface class SecureStorageService {
 
 class FlutterSecureStorageService implements SecureStorageService {
   FlutterSecureStorageService({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? const FlutterSecureStorage();
 
   final FlutterSecureStorage _storage;
 
@@ -16,7 +16,8 @@ class FlutterSecureStorageService implements SecureStorageService {
   Future<String?> read(String key) => _storage.read(key: key);
 
   @override
-  Future<void> write(String key, String value) => _storage.write(key: key, value: value);
+  Future<void> write(String key, String value) =>
+      _storage.write(key: key, value: value);
 
   @override
   Future<void> delete(String key) => _storage.delete(key: key);

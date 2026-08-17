@@ -55,7 +55,9 @@ class HealthStatusCard extends StatelessWidget {
             health.when(
               loading: () => const AppLoadingView(),
               error: (error, _) {
-                final message = error is Failure ? error.message : '后端连接失败，请稍后重试。';
+                final message = error is Failure
+                    ? error.message
+                    : '后端连接失败，请稍后重试。';
                 return _StatusBody(
                   icon: Icons.cloud_off_outlined,
                   color: Theme.of(context).colorScheme.error,
@@ -79,7 +81,9 @@ class HealthStatusCard extends StatelessWidget {
                   icon: Icons.check_circle_outline_rounded,
                   color: const Color(0xFF08775F),
                   title: '后端连接正常',
-                  child: Text('服务 ${response.service} · 版本 ${response.version}'),
+                  child: Text(
+                    '服务 ${response.service} · 版本 ${response.version}',
+                  ),
                 );
               },
             ),
@@ -113,9 +117,9 @@ class _EnvironmentBadge extends StatelessWidget {
         child: Text(
           label,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: const Color(0xFF435653),
-                fontWeight: FontWeight.w700,
-              ),
+            color: const Color(0xFF435653),
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );
@@ -149,9 +153,9 @@ class _StatusBody extends StatelessWidget {
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  color: color,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: 8),
               child,
@@ -178,9 +182,9 @@ class _DetailRow extends StatelessWidget {
           width: 88,
           child: Text(
             label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF697A77),
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: const Color(0xFF697A77)),
           ),
         ),
         Expanded(child: SelectableText(value)),
