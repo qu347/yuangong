@@ -90,7 +90,7 @@ PostgreSQL 测试发现并修复了两个 SQLite 不会暴露的真实问题：n
 - 大小：232,355,573 字节。
 - SHA-256：`1F13DCF28053ABDC40C633A722B728EE32E7A7CE34592740A48C9314FB3563FE`
 - `adb install -r`：Success。
-- 最终 PID：6778；`topResumedActivity` 为 `com.yourcompany.employee_app/.MainActivity`；包级 FATAL 行数 0。
+- 最终复核 PID：2711；`topResumedActivity` 为 `com.yourcompany.employee_app/.MainActivity`；包级 FATAL 行数 0。
 - 真实 UI/API integration：与 Windows 相同流程，1/1 PASSED。
 
 非阻塞警告：`am start -W` 返回 timeout，但 3 秒后 PID、前台 Activity 与 FATAL=0 均通过；aapt 36 无法直接读取中文路径 APK，Flutter 回退源 Manifest 后构建、安装和运行均成功。
@@ -99,9 +99,11 @@ PostgreSQL 测试发现并修复了两个 SQLite 不会暴露的真实问题：n
 
 真实用户 `QU\quwenxin` 的持久用户配置仍为 `GRADLE_USER_HOME=D:\DevCaches\Gradle`、`PUB_CACHE=D:\DevCaches\Pub\Cache`。Codex 沙箱进程继承精简环境时看不到这两个变量，直接 wrapper 会尝试在默认 C 盘下载 Gradle 9.3.1；本轮中止该下载，C 盘仅留下 0 字节 `.lck/.part` 占位，不做删除。正式 Android 验收在新的真实用户 PowerShell 中从持久用户配置加载同值。
 
+最终 Git 核对时模拟器已退出；原生 emulator 诊断显示精简环境缺少 `ANDROID_AVD_HOME`，不是应用崩溃。新的真实用户 PowerShell 从持久配置加载 `D:\Android\avd` / `D:\Android\Sdk` 后，无窗口恢复 `employee_api36`，再次安装同一最终 APK并得到 PID 2711、前台 MainActivity、FATAL=0。模拟器在交付时保持 boot_completed=1。
+
 ## 9. Git 与安全审查
 
-- 本阶段本地提交目标：5 个逻辑提交。
+- 本阶段最终为 6 个逻辑本地提交；第 6 个只记录最终模拟器恢复状态。
 - 已知 `origin` 来自上一轮用户授权上传；本阶段 push=否。
 - 未执行 reset、clean、restore、rebase、amend、强制覆盖或删除未跟踪文件。
 - 用户侧未跟踪 `docs/environment-configuration.md` 保持不动且未纳入提交。
