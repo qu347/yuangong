@@ -1,14 +1,46 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/authentication/presentation/auth_controller.dart';
+import '../../features/authentication/presentation/auth_session_store.dart';
+import '../../features/authentication/presentation/login_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
+import '../../features/departments/presentation/department_page.dart';
+import '../../features/employees/presentation/employee_detail_page.dart';
+import '../../features/employees/presentation/employee_list_page.dart';
 import '../../features/shell/presentation/adaptive_shell.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final router = GoRouter(
-    initialLocation: '/dashboard',
+  final router = createAppRouter(
+    ref.watch(authSessionStoreProvider),
+    onLogout: () {
+      unawaited(ref.read(authControllerProvider.notifier).logout());
+    },
+  );
+  ref.onDispose(router.dispose);
+  return router;
+});
+
+GoRouter createAppRouter(
+  AuthSessionStore sessionStore, {
+  String initialLocation = '/login',
+  VoidCallback? onLogout,
+}) {
+  return GoRouter(
+    initialLocation: initialLocation,
+    refreshListenable: sessionStore,
+    redirect: (context, state) {
+      final onLogin = state.matchedLocation == '/login';
+      if (sessionStore.status != AuthSessionStatus.authenticated) {
+        return onLogin ? null : '/login';
+      }
+      return onLogin ? '/employees' : null;
+    },
     routes: [
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       ShellRoute(
         builder: (context, state, child) {
           return AdaptiveShell(
@@ -16,6 +48,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             onDestinationSelected: (index) {
               context.go(appDestinations[index].path);
             },
+            onLogout: onLogout,
             child: child,
           );
         },
@@ -26,93 +59,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/employees',
-            builder: (context, state) => const PlaceholderPage(
-              title: '通讯录',
-              description: '员工档案与组织通讯能力将在后续迭代中开发。',
-              icon: Icons.badge_outlined,
-            ),
+            builder: (context, state) => const EmployeeListPage(),
           ),
           GoRoute(
-            path: '/attendance',
-            builder: (context, state) => const PlaceholderPage(
-              title: '考勤',
-              description: '考勤规则与打卡方式尚待业务确认。',
-              icon: Icons.schedule_outlined,
-            ),
+            path: '/employees/:id',
+            builder: (context, state) =>
+                EmployeeDetailPage(employeeId: state.pathParameters['id']!),
           ),
           GoRoute(
-            path: '/approvals',
-            builder: (context, state) => const PlaceholderPage(
-              title: '审批',
-              description: '请假、补卡与加班审批将在后续迭代中开发。',
-              icon: Icons.fact_check_outlined,
-            ),
-          ),
-          GoRoute(
-            path: '/notices',
-            builder: (context, state) => const PlaceholderPage(
-              title: '公告',
-              description: '企业公告与通知能力将在后续迭代中开发。',
-              icon: Icons.campaign_outlined,
-            ),
-          ),
-          GoRoute(
-            path: '/profile',
-            builder: (context, state) => const PlaceholderPage(
-              title: '我的',
-              description: '个人资料与账户设置将在认证方案确认后开发。',
-              icon: Icons.person_outline_rounded,
-            ),
+            path: '/departments',
+            builder: (context, state) => const DepartmentPage(),
           ),
         ],
       ),
     ],
   );
-  ref.onDispose(router.dispose);
-  return router;
-});
-
-class PlaceholderPage extends StatelessWidget {
-  const PlaceholderPage({
-    required this.title,
-    required this.description,
-    required this.icon,
-    super.key,
-  });
-
-  final String title;
-  final String description;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  size: 48,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(height: 20),
-                Text(title, style: Theme.of(context).textTheme.headlineMedium),
-                const SizedBox(height: 12),
-                Text(
-                  description,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }

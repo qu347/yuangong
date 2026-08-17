@@ -30,28 +30,10 @@ const appDestinations = <AppDestination>[
     selectedIcon: Icons.badge_rounded,
   ),
   AppDestination(
-    label: '考勤',
-    path: '/attendance',
-    icon: Icons.schedule_outlined,
-    selectedIcon: Icons.schedule_rounded,
-  ),
-  AppDestination(
-    label: '审批',
-    path: '/approvals',
-    icon: Icons.fact_check_outlined,
-    selectedIcon: Icons.fact_check_rounded,
-  ),
-  AppDestination(
-    label: '公告',
-    path: '/notices',
-    icon: Icons.campaign_outlined,
-    selectedIcon: Icons.campaign_rounded,
-  ),
-  AppDestination(
-    label: '我的',
-    path: '/profile',
-    icon: Icons.person_outline_rounded,
-    selectedIcon: Icons.person_rounded,
+    label: '部门',
+    path: '/departments',
+    icon: Icons.account_tree_outlined,
+    selectedIcon: Icons.account_tree_rounded,
   ),
 ];
 
@@ -60,12 +42,14 @@ class AdaptiveShell extends StatelessWidget {
     required this.currentPath,
     required this.onDestinationSelected,
     required this.child,
+    this.onLogout,
     super.key,
   });
 
   final String currentPath;
   final ValueChanged<int> onDestinationSelected;
   final Widget child;
+  final VoidCallback? onLogout;
 
   int get _selectedIndex {
     final index = appDestinations.indexWhere(
@@ -108,6 +92,17 @@ class AdaptiveShell extends StatelessWidget {
                             )
                           : const _BrandMark(),
                     ),
+                    trailing: onLogout == null
+                        ? null
+                        : Padding(
+                            padding: const EdgeInsets.only(top: 18),
+                            child: IconButton(
+                              key: const Key('shell_logout'),
+                              tooltip: '退出登录',
+                              onPressed: onLogout,
+                              icon: const Icon(Icons.logout_rounded),
+                            ),
+                          ),
                     destinations: [
                       for (final destination in appDestinations)
                         NavigationRailDestination(
@@ -135,6 +130,16 @@ class AdaptiveShell extends StatelessWidget {
                 Text('企业员工管理系统'),
               ],
             ),
+            actions: [
+              if (onLogout != null)
+                IconButton(
+                  key: const Key('shell_logout'),
+                  tooltip: '退出登录',
+                  onPressed: onLogout,
+                  icon: const Icon(Icons.logout_rounded),
+                ),
+              const SizedBox(width: 8),
+            ],
           ),
           body: child,
           bottomNavigationBar: NavigationBar(
