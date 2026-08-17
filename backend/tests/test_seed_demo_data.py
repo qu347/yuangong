@@ -34,6 +34,43 @@ def test_seed_demo_data_is_idempotent_and_uses_only_fictional_directory_data(mon
         User.objects.filter(username="demo.employee").count(),
     ) == first_counts
     assert Group.objects.filter(name__in=("system_admin", "hr_admin", "employee")).count() == 3
+    assert set(
+        Group.objects.get(name="employee").permissions.values_list(
+            "content_type__app_label", "codename"
+        )
+    ) == {
+        ("employees", "view_employee"),
+        ("organizations", "view_department"),
+        ("organizations", "view_position"),
+    }
+    expected_management_permissions = {
+        ("audit", "view_auditevent"),
+        ("employees", "add_employee"),
+        ("employees", "change_employee"),
+        ("employees", "view_employee"),
+        ("organizations", "add_department"),
+        ("organizations", "change_department"),
+        ("organizations", "view_department"),
+        ("organizations", "add_position"),
+        ("organizations", "change_position"),
+        ("organizations", "view_position"),
+    }
+    assert (
+        set(
+            Group.objects.get(name="hr_admin").permissions.values_list(
+                "content_type__app_label", "codename"
+            )
+        )
+        == expected_management_permissions
+    )
+    assert (
+        set(
+            Group.objects.get(name="system_admin").permissions.values_list(
+                "content_type__app_label", "codename"
+            )
+        )
+        == expected_management_permissions
+    )
     assert all(
         employee.work_email.endswith("@example.test")
         for employee in Employee.objects.exclude(work_email="")

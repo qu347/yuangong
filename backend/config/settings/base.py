@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "drf_spectacular",
+    "rest_framework_simplejwt.token_blacklist",
     "modules.common.apps.CommonConfig",
     "modules.accounts.apps.AccountsConfig",
     "modules.organizations.apps.OrganizationsConfig",
@@ -106,7 +107,9 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-    "ROTATE_REFRESH_TOKENS": False,
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "TOKEN_REFRESH_SERIALIZER": "modules.accounts.serializers.ActiveUserTokenRefreshSerializer",
 }
 
 SPECTACULAR_SETTINGS = {

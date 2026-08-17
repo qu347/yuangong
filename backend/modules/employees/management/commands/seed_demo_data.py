@@ -1,11 +1,11 @@
 import os
 from datetime import date
 
-from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from modules.accounts.models import User
+from modules.accounts.rbac import sync_rbac_permissions
 from modules.employees.models import Employee
 from modules.organizations.models import Department, Position
 
@@ -20,10 +20,7 @@ class Command(BaseCommand):
         if not password:
             raise CommandError("必须通过进程环境变量 EMPLOYEE_DEMO_PASSWORD 提供演示密码。")
 
-        groups = {
-            name: Group.objects.get_or_create(name=name)[0]
-            for name in ("system_admin", "hr_admin", "employee")
-        }
+        groups = sync_rbac_permissions()
 
         department_specs = (
             ("HQ", "企业总部", None, 10),
