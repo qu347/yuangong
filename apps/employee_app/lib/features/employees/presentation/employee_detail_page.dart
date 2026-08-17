@@ -84,7 +84,7 @@ class EmployeeDetailPage extends ConsumerWidget {
                             OutlinedButton.icon(
                               key: const Key('employee_edit_entry'),
                               onPressed: () =>
-                                  context.go('/employees/${value.id}/edit'),
+                                  context.push('/employees/${value.id}/edit'),
                               icon: const Icon(Icons.edit_outlined),
                               label: const Text('编辑员工'),
                             ),

@@ -10,7 +10,12 @@ from modules.common.pagination import DirectoryPagination
 from modules.common.permissions import DirectoryModelPermission
 
 from .models import Employee
-from .serializers import EmployeeDetailSerializer, EmployeeSerializer, EmployeeWriteSerializer
+from .serializers import (
+    EmployeeDetailSerializer,
+    EmployeeSerializer,
+    EmployeeStatusResponseSerializer,
+    EmployeeWriteSerializer,
+)
 from .services import create_employee, depart_employee, reactivate_employee, update_employee
 
 
@@ -103,6 +108,7 @@ class EmployeeStatusView(APIView):
     permission_action = "change"
     operation = None
 
+    @extend_schema(request=None, responses=EmployeeStatusResponseSerializer)
     def post(self, request, id):
         employee, changed = self.operation(
             employee_id=id,

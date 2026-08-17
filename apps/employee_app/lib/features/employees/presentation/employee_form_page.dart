@@ -314,7 +314,11 @@ class _EmployeeFormPageState extends ConsumerState<EmployeeFormPage> {
       return;
     }
     setState(() => _dirty = false);
-    context.pop();
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/employees');
+    }
   }
 }
 

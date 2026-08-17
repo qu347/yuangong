@@ -193,4 +193,6 @@ flutter build apk --debug --dart-define-from-file=../../config/dev.android-emula
 
 ## 下一步
 
-先确认 [docs/OPEN_DECISIONS.md](docs/OPEN_DECISIONS.md) 中的发布前事项，再按 [docs/next-steps.md](docs/next-steps.md) 推进 HR 管理员员工维护、部门与岗位维护、操作审计和更细 RBAC。不要直接跳到考勤、审批或薪资。
+第二阶段已经具备 HR 员工/部门/岗位维护、Django model-permission RBAC、append-only 操作审计、员工离职/复职和 Refresh Token 服务端吊销。设计与验收证据见 [ADR-0004](docs/decisions/ADR-0004-hr-directory-management-security.md) 和 [第二阶段验收报告](docs/hr-directory-management-validation-report.md)。
+
+下一阶段先处理正式 applicationId/Windows 标识、账号邀请/密码重置、账号恢复流程与审计保留/导出策略。不要直接跳到考勤、审批或薪资。

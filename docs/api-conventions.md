@@ -11,8 +11,16 @@
 ## 认证与目录端点
 
 - `POST /api/v1/auth/login/` 与 `POST /api/v1/auth/refresh/` 公开。
+- Refresh Token 成功刷新后 rotation，旧 Refresh Token 立即进入 blacklist。
+- `POST /api/v1/auth/logout/` 需要 Access Token 和当前用户的 Refresh Token，成功返回 204。
+- `POST /api/v1/auth/logout-all/` 吊销当前用户全部已登记 Refresh Token，返回 `revoked_sessions`。
 - `GET /api/v1/me/`、部门、岗位和员工目录要求 Bearer JWT。
-- `health`、OpenAPI schema 和 docs 保持公开；目录写 API本阶段不提供。
+- `/me/` 返回角色和稳定 capabilities；客户端只据此显示入口，后端权限仍是授权边界。
+- Department、Position、Employee 支持 POST/PATCH 和显式状态 action，不提供 DELETE。
+- AuditEvent 只支持 GET list/detail。
+- `health`、OpenAPI schema 和 docs 保持公开。
+
+目录写操作使用 Django model permissions：`employee` 只读；`hr_admin`、`system_admin` 可新增、修改和执行状态 action，并可读取审计。`sync_rbac` 幂等补齐权限，不移除额外授权。
 
 ## 分页
 
@@ -27,18 +35,20 @@
 
 ## 错误
 
-稳定错误码使用英文大写下划线；用户可见消息使用简体中文。基础结构：
+稳定错误码使用英文小写下划线；用户可见消息使用简体中文。基础结构：
 
 ```json
 {
-  "code": "VALIDATION_ERROR",
-  "message": "请求参数不正确",
+  "code": "validation_error",
+  "message": "请求参数不正确。",
   "details": {},
   "request_id": "optional-request-id"
 }
 ```
 
-请求 ID 未来从可信代理或后端中间件生成，使用响应头 `X-Request-ID` 并在错误响应中回显；当前不接受未校验客户端值作为审计标识。
+错误响应会回显 `X-Request-ID`，业务写服务把该值作为可选审计关联标识；调用方不得在其中放入 Token、账号或个人信息。生产部署应由可信入口生成并校验该值。
+
+稳定 409 冲突码包括 `resource_in_use`、`invalid_state_transition`、`uniqueness_conflict` 与 `stale_object`。冲突详情只返回安全计数或可操作信息，不返回 SQL、表名和约束名。
 
 ## HTTP 状态码
 

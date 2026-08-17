@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,8 +8,10 @@ from modules.common.permissions import DirectoryModelPermission
 from .models import Department, Position
 from .serializers import (
     DepartmentSerializer,
+    DepartmentStatusResponseSerializer,
     DepartmentWriteSerializer,
     PositionSerializer,
+    PositionStatusResponseSerializer,
     PositionWriteSerializer,
 )
 from .services import (
@@ -122,6 +125,7 @@ class DepartmentStatusView(APIView):
     permission_action = "change"
     active = True
 
+    @extend_schema(request=None, responses=DepartmentStatusResponseSerializer)
     def post(self, request, id):
         department, changed = set_department_active(
             department_id=id,
@@ -146,6 +150,7 @@ class PositionStatusView(APIView):
     permission_action = "change"
     active = True
 
+    @extend_schema(request=None, responses=PositionStatusResponseSerializer)
     def post(self, request, id):
         position, changed = set_position_active(
             position_id=id,

@@ -71,3 +71,9 @@ class EmployeeWriteSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return EmployeeDetailSerializer(instance).data
+
+
+class EmployeeStatusResponseSerializer(serializers.Serializer):
+    employee = EmployeeDetailSerializer(read_only=True)
+    changed = serializers.BooleanField(read_only=True)
+    account_requires_activation = serializers.BooleanField(read_only=True, required=False)

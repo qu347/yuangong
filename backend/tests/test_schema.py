@@ -57,3 +57,25 @@ def test_openapi_schema_documents_directory_routes_and_filters():
     assert {"search", "department", "status", "page", "page_size", "ordering"} <= (
         employee_parameters
     )
+
+
+@pytest.mark.django_db
+def test_openapi_schema_documents_management_actions_with_json_responses():
+    response = APIClient().get(
+        "/api/schema/",
+        HTTP_ACCEPT="application/vnd.oai.openapi+json",
+    )
+
+    schema = response.json()
+    for path in (
+        "/api/v1/auth/logout-all/",
+        "/api/v1/departments/{id}/activate/",
+        "/api/v1/departments/{id}/deactivate/",
+        "/api/v1/positions/{id}/activate/",
+        "/api/v1/positions/{id}/deactivate/",
+        "/api/v1/employees/{id}/depart/",
+        "/api/v1/employees/{id}/reactivate/",
+    ):
+        operation = schema["paths"][path]["post"]
+        success = operation["responses"]["200"]
+        assert success["content"]["application/json"]["schema"]

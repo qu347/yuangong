@@ -43,10 +43,14 @@ def revoke_refresh_token(raw_token, *, user):
 
 @transaction.atomic
 def revoke_all_user_tokens(user):
-    outstanding_tokens = OutstandingToken.objects.filter(
-        user=user,
-        blacklistedtoken__isnull=True,
-    ).select_for_update()
+    outstanding_tokens = (
+        OutstandingToken.objects.filter(
+            user=user,
+            blacklistedtoken__isnull=True,
+        )
+        .order_by("pk")
+        .select_for_update(of=("self",))
+    )
     revoked_sessions = 0
     for outstanding in outstanding_tokens:
         _, created = BlacklistedToken.objects.get_or_create(token=outstanding)

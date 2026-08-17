@@ -19,6 +19,10 @@ class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField(write_only=True, trim_whitespace=False)
 
 
+class LogoutAllResponseSerializer(serializers.Serializer):
+    revoked_sessions = serializers.IntegerField(min_value=0, read_only=True)
+
+
 class CurrentUserDepartmentSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
     code = serializers.CharField(read_only=True)

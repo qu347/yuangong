@@ -115,7 +115,7 @@ def update_employee(*, employee_id, actor, data, source="api", request_id=None):
 def depart_employee(*, employee_id, actor, request_id=None):
     with transaction.atomic():
         employee = (
-            Employee.objects.select_for_update()
+            Employee.objects.select_for_update(of=("self",))
             .select_related("user", "department", "position")
             .get(pk=employee_id)
         )
@@ -157,7 +157,7 @@ def depart_employee(*, employee_id, actor, request_id=None):
 def reactivate_employee(*, employee_id, actor, request_id=None):
     with transaction.atomic():
         employee = (
-            Employee.objects.select_for_update()
+            Employee.objects.select_for_update(of=("self",))
             .select_related("user", "department", "position")
             .get(pk=employee_id)
         )

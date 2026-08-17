@@ -47,3 +47,13 @@ class PositionWriteSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return PositionSerializer(instance).data
+
+
+class DepartmentStatusResponseSerializer(serializers.Serializer):
+    department = DepartmentSerializer(read_only=True)
+    changed = serializers.BooleanField(read_only=True)
+
+
+class PositionStatusResponseSerializer(serializers.Serializer):
+    position = PositionSerializer(read_only=True)
+    changed = serializers.BooleanField(read_only=True)

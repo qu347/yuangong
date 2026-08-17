@@ -59,7 +59,7 @@ class EmployeeListPage extends ConsumerWidget {
                 if (capabilities.canManageEmployees) ...[
                   FilledButton.icon(
                     key: const Key('employee_create_entry'),
-                    onPressed: () => context.go('/employees/new'),
+                    onPressed: () => context.push('/employees/new'),
                     icon: const Icon(Icons.person_add_alt_1_rounded),
                     label: const Text('新增员工'),
                   ),

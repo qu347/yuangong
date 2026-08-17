@@ -224,3 +224,19 @@ Flutter、Gradle、Android SDK、AVD、Windows 构建、Docker Engine/Compose �
 | Pub 项目元数据 | PASSED WITH WARNINGS | 持久用户变量正确，但项目 97 个生成引用仍指向 C 盘；C 盘缓存为 9,877 个文件、154,872,143 字节 |
 
 完整项目级命令、产物哈希、进程、协议和 Git 结果见 `docs/project-bootstrap-validation-report.md`。
+
+## 21. HR 目录管理第二阶段复验（2026-08-17）
+
+| 检查 | 状态 | 结果 |
+| --- | --- | --- |
+| 持久 Gradle/Pub | PASSED WITH NOTE | 真实用户 PowerShell 读取 `D:\DevCaches\Gradle` / `D:\DevCaches\Pub\Cache`；Codex 精简继承环境不自动注入，正式 Android 构建从用户配置加载 |
+| Docker Compose | PASSED | Engine 29.7.2；api running；PostgreSQL/Redis healthy；Redis PONG；未删除 volume |
+| 迁移 | PASSED | audit 0001、organizations 0002、token_blacklist 官方迁移全部应用；无迁移差异 |
+| SQLite/PostgreSQL | PASSED | 两种后端均 75/75；PostgreSQL 专属行锁问题已修复 |
+| OpenAPI | PASSED | `--validate --fail-on-warn` 退出码 0，0 warning/error |
+| `scripts/check.ps1` | PASSED | Dart 74/0 变更、analyze 0 issue、Flutter 66/66、Ruff/Django/SQLite/Compose 全通过 |
+| Windows Debug | PASSED WITH WARNING | 41.6 秒；EXE 983,040 字节；SHA-256 `769AFE9978660356D85C9AF1CB8623926002CAA6C92D35BBA770B50C13A41601`；进程响应正常；仅进程级 TrackFileAccess=false |
+| Android Debug | PASSED WITH WARNING | 29.8 秒；APK 232,355,573 字节；SHA-256 `1F13DCF28053ABDC40C633A722B728EE32E7A7CE34592740A48C9314FB3563FE`；install Success；PID 6778；前台 Activity 通过；FATAL=0 |
+| 真实 UI/API | PASSED | Windows 与 employee_api36 均完成 HR 登录、管理表单、审计、目录详情、部门与 logout |
+
+完整功能、安全、数据清理和 Git 结果见 `docs/hr-directory-management-validation-report.md`。

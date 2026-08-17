@@ -8,7 +8,12 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from modules.audit.services import record_audit_event
 
-from .serializers import CurrentUserSerializer, LoginSerializer, LogoutSerializer
+from .serializers import (
+    CurrentUserSerializer,
+    LoginSerializer,
+    LogoutAllResponseSerializer,
+    LogoutSerializer,
+)
 from .tokens import revoke_all_user_tokens, revoke_refresh_token
 
 
@@ -51,7 +56,7 @@ class LogoutView(APIView):
 
 
 class LogoutAllView(APIView):
-    @extend_schema(responses={200: dict})
+    @extend_schema(request=None, responses=LogoutAllResponseSerializer)
     def post(self, request):
         with transaction.atomic():
             revoked_sessions = revoke_all_user_tokens(request.user)
