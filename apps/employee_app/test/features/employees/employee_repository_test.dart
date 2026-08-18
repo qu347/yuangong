@@ -1,0 +1,152 @@
+import 'package:employee_app/core/errors/failure.dart';
+import 'package:employee_app/core/network/api_client.dart';
+import 'package:employee_app/core/network/api_endpoints.dart';
+import 'package:employee_app/features/employees/data/employee_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockEmployeeApiClient extends Mock implements ApiClient {}
+
+const employeeJson = <String, dynamic>{
+  'id': '00000000-0000-0000-0000-000000000201',
+  'employee_no': 'EMP-0001',
+  'full_name': '林知远',
+  'work_email': 'lin.zhiyuan@example.test',
+  'work_phone': '010-5550-1001',
+  'department': {
+    'id': '00000000-0000-0000-0000-000000000301',
+    'code': 'ENG',
+    'name': '研发中心',
+  },
+  'position': {
+    'id': '00000000-0000-0000-0000-000000000401',
+    'code': 'ENG-SWE',
+    'name': '软件工程师',
+  },
+  'employment_status': 'active',
+  'hire_date': '2023-05-08',
+};
+
+void main() {
+  late MockEmployeeApiClient apiClient;
+  late NetworkEmployeeRepository repository;
+
+  setUp(() {
+    apiClient = MockEmployeeApiClient();
+    repository = NetworkEmployeeRepository(apiClient);
+  });
+
+  test(
+    'fetches a complete filtered page and parses directory fields',
+    () async {
+      when(
+        () => apiClient.getMap(
+          ApiEndpoints.employees,
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => {
+          'count': 1,
+          'next': null,
+          'previous': null,
+          'results': [employeeJson],
+        },
+      );
+
+      final page = await repository.fetchEmployees(
+        search: '林知',
+        departmentId: '00000000-0000-0000-0000-000000000301',
+        status: 'active',
+        page: 2,
+        pageSize: 20,
+        ordering: '-full_name',
+      );
+
+      expect(page.count, 1);
+      expect(page.results.single.employeeNo, 'EMP-0001');
+      expect(page.results.single.department.name, '研发中心');
+      expect(page.results.single.position?.name, '软件工程师');
+      expect(page.results.single.hireDate, DateTime(2023, 5, 8));
+      verify(
+        () => apiClient.getMap(
+          ApiEndpoints.employees,
+          queryParameters: {
+            'search': '林知',
+            'department': '00000000-0000-0000-0000-000000000301',
+            'status': 'active',
+            'page': 2,
+            'page_size': 20,
+            'ordering': '-full_name',
+          },
+        ),
+      ).called(1);
+    },
+  );
+
+  test('omits empty optional filters from the request', () async {
+    when(
+      () => apiClient.getMap(
+        ApiEndpoints.employees,
+        queryParameters: any(named: 'queryParameters'),
+      ),
+    ).thenAnswer(
+      (_) async => {
+        'count': 0,
+        'next': null,
+        'previous': null,
+        'results': <dynamic>[],
+      },
+    );
+
+    await repository.fetchEmployees(page: 1, pageSize: 20);
+
+    verify(
+      () => apiClient.getMap(
+        ApiEndpoints.employees,
+        queryParameters: {
+          'page': 1,
+          'page_size': 20,
+          'ordering': 'employee_no',
+        },
+      ),
+    ).called(1);
+  });
+
+  test('fetches employee detail by path id', () async {
+    when(
+      () => apiClient.getMap('${ApiEndpoints.employees}${employeeJson['id']}/'),
+    ).thenAnswer((_) async => employeeJson);
+
+    final employee = await repository.fetchEmployee(
+      employeeJson['id']! as String,
+    );
+
+    expect(employee.fullName, '林知远');
+    expect(employee.workEmail, 'lin.zhiyuan@example.test');
+  });
+
+  test('maps malformed employee data into a safe data failure', () async {
+    when(
+      () => apiClient.getMap(
+        ApiEndpoints.employees,
+        queryParameters: any(named: 'queryParameters'),
+      ),
+    ).thenAnswer(
+      (_) async => {
+        'count': 1,
+        'next': null,
+        'previous': null,
+        'results': [
+          {'employee_no': 'EMP-0001'},
+        ],
+      },
+    );
+
+    await expectLater(
+      repository.fetchEmployees(page: 1, pageSize: 20),
+      throwsA(
+        isA<Failure>().having((error) => error.type, 'type', FailureType.data),
+      ),
+    );
+  });
+}

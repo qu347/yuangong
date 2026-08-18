@@ -1,7 +1,7 @@
 from .base import *  # noqa: F403
 from .base import env
 
-SECRET_KEY = "test-only-secret-key"
+SECRET_KEY = "test-only-secret-key-with-at-least-32-bytes"
 DEBUG = False
 ALLOWED_HOSTS = ["testserver", "localhost", "127.0.0.1"]
 CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]  # noqa: F405

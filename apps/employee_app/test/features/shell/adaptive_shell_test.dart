@@ -50,4 +50,24 @@ void main() {
     expect(find.byType(NavigationRail), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
   });
+
+  testWidgets('exposes logout as a separate shell action', (tester) async {
+    var logoutCount = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AdaptiveShell(
+          currentPath: '/employees',
+          onDestinationSelected: (_) {},
+          onLogout: () {
+            logoutCount += 1;
+          },
+          child: const SizedBox(),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('shell_logout')));
+
+    expect(logoutCount, 1);
+  });
 }

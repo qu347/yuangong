@@ -1,4 +1,12 @@
-enum FailureType { network, service, data, unexpected }
+enum FailureType {
+  network,
+  authentication,
+  permission,
+  validation,
+  service,
+  data,
+  unexpected,
+}
 
 class Failure implements Exception {
   const Failure({required this.type, required this.message});
@@ -10,6 +18,16 @@ class Failure implements Exception {
   const Failure.service()
     : type = FailureType.service,
       message = '后端服务暂时不可用，请稍后重试。';
+
+  const Failure.authentication([this.message = '登录状态已失效，请重新登录。'])
+    : type = FailureType.authentication;
+
+  const Failure.permission()
+    : type = FailureType.permission,
+      message = '当前账号没有权限执行此操作。';
+
+  const Failure.validation([this.message = '请求参数不正确。'])
+    : type = FailureType.validation;
 
   const Failure.data() : type = FailureType.data, message = '后端返回了无法识别的数据。';
 
