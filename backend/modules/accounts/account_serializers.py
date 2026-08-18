@@ -18,6 +18,7 @@ class AccountSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
     has_active_invitation = serializers.SerializerMethodField()
     email_mismatch = serializers.SerializerMethodField()
+    is_manageable = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -31,6 +32,7 @@ class AccountSerializer(serializers.ModelSerializer):
             "role",
             "has_active_invitation",
             "email_mismatch",
+            "is_manageable",
         )
         read_only_fields = fields
 
@@ -63,6 +65,10 @@ class AccountSerializer(serializers.ModelSerializer):
             and employee.work_email.casefold() != user.email.casefold()
         )
 
+    @extend_schema_field(serializers.BooleanField())
+    def get_is_manageable(self, user):
+        return not user.is_superuser and managed_role(user) != "system_admin"
+
 
 class AccountUpdateSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -75,6 +81,13 @@ class AccountRoleChangeSerializer(serializers.Serializer):
 class AccountActionResponseSerializer(serializers.Serializer):
     account = AccountSerializer(read_only=True)
     changed = serializers.BooleanField(read_only=True)
+
+
+class AccountRoleChangeResponseSerializer(AccountSerializer):
+    changed = serializers.BooleanField(read_only=True)
+
+    class Meta(AccountSerializer.Meta):
+        fields = (*AccountSerializer.Meta.fields, "changed")
 
 
 class AccountSessionRevokeResponseSerializer(serializers.Serializer):

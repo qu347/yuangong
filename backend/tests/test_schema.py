@@ -84,3 +84,22 @@ def test_openapi_schema_documents_management_actions_with_json_responses():
         operation = schema["paths"][path]["post"]
         success = operation["responses"]["200"]
         assert success["content"]["application/json"]["schema"]
+
+
+@pytest.mark.django_db
+def test_openapi_schema_documents_session_tokens_and_flat_role_response():
+    schema = (
+        APIClient()
+        .get(
+            "/api/schema/",
+            HTTP_ACCEPT="application/vnd.oai.openapi+json",
+        )
+        .json()
+    )
+
+    login = schema["components"]["schemas"]["LoginResponse"]["properties"]
+    refresh = schema["components"]["schemas"]["ActiveUserTokenRefresh"]["properties"]
+    role = schema["components"]["schemas"]["AccountRoleChangeResponse"]["properties"]
+    assert {"access", "refresh", "session"} <= set(login)
+    assert {"access", "refresh"} <= set(refresh)
+    assert {"id", "username", "role", "changed", "is_manageable"} <= set(role)

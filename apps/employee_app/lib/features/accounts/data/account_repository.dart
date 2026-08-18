@@ -22,6 +22,7 @@ abstract interface class AccountRepository {
   Future<Account> setActive(String id, {required bool active});
   Future<Account> changeRole(String id, String role);
   Future<int> revokeSessions(String id);
+  Future<List<AccountInvitation>> fetchInvitations();
   Future<AccountInvitation> createInvitation({
     required String employeeId,
     required String username,
@@ -108,6 +109,24 @@ class NetworkAccountRepository implements AccountRepository {
       final count = payload['revoked_sessions'];
       if (count is! int) throw const FormatException('invalid revoke count');
       return count;
+    } on AppException catch (error) {
+      throw _failureFor(error);
+    } on FormatException {
+      throw const Failure.data();
+    }
+  }
+
+  @override
+  Future<List<AccountInvitation>> fetchInvitations() async {
+    try {
+      return List<AccountInvitation>.unmodifiable(
+        (await _apiClient.getList(ApiEndpoints.invitations)).map((item) {
+          if (item is! Map<String, dynamic>) {
+            throw const FormatException('invalid invitation item');
+          }
+          return AccountInvitation.fromJson(item);
+        }),
+      );
     } on AppException catch (error) {
       throw _failureFor(error);
     } on FormatException {

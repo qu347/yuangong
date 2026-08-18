@@ -14,6 +14,12 @@ final accountDetailProvider = FutureProvider.autoDispose
       retry: (retryCount, error) => null,
     );
 
+final invitationListProvider =
+    FutureProvider.autoDispose<List<AccountInvitation>>(
+      (ref) => ref.watch(accountRepositoryProvider).fetchInvitations(),
+      retry: (retryCount, error) => null,
+    );
+
 final accountControllerProvider = Provider<AccountController>(
   AccountController.new,
 );
@@ -25,6 +31,7 @@ class AccountController {
 
   void refresh([String? id]) {
     _ref.invalidate(accountListProvider);
+    _ref.invalidate(invitationListProvider);
     if (id != null) _ref.invalidate(accountDetailProvider(id));
   }
 
@@ -49,6 +56,18 @@ class AccountController {
   Future<int> revokeSessions(String id) async {
     final result = await repository.revokeSessions(id);
     refresh(id);
+    return result;
+  }
+
+  Future<AccountInvitation> resendInvitation(String id) async {
+    final result = await repository.resendInvitation(id);
+    refresh();
+    return result;
+  }
+
+  Future<bool> revokeInvitation(String id) async {
+    final result = await repository.revokeInvitation(id);
+    refresh();
     return result;
   }
 }

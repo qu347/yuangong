@@ -34,6 +34,7 @@ class Account {
     required this.role,
     required this.hasActiveInvitation,
     required this.emailMismatch,
+    required this.isManageable,
   });
 
   final String id;
@@ -45,16 +46,21 @@ class Account {
   final String? role;
   final bool hasActiveInvitation;
   final bool emailMismatch;
+  final bool isManageable;
 
   factory Account.fromJson(Map<String, dynamic> json) {
     final employee = json['employee'];
     final active = json['is_active'];
     final invitation = json['has_active_invitation'];
     final mismatch = json['email_mismatch'];
+    final manageable = json['is_manageable'];
     if (employee != null && employee is! Map<String, dynamic>) {
       throw const FormatException('invalid account employee');
     }
-    if (active is! bool || invitation is! bool || mismatch is! bool) {
+    if (active is! bool ||
+        invitation is! bool ||
+        mismatch is! bool ||
+        manageable is! bool) {
       throw const FormatException('invalid account flags');
     }
     final login = json['last_login'];
@@ -70,6 +76,7 @@ class Account {
       role: json['role'] as String?,
       hasActiveInvitation: invitation,
       emailMismatch: mismatch,
+      isManageable: manageable,
     );
   }
 }

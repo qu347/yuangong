@@ -9,6 +9,7 @@ from modules.common.pagination import DirectoryPagination
 
 from .account_serializers import (
     AccountActionResponseSerializer,
+    AccountRoleChangeResponseSerializer,
     AccountRoleChangeSerializer,
     AccountSerializer,
     AccountSessionRevokeResponseSerializer,
@@ -112,7 +113,10 @@ class AccountDeactivateView(AccountLifecycleView):
 class AccountRoleChangeView(APIView):
     permission_classes = [CanManageAccounts]
 
-    @extend_schema(request=AccountRoleChangeSerializer, responses=AccountActionResponseSerializer)
+    @extend_schema(
+        request=AccountRoleChangeSerializer,
+        responses=AccountRoleChangeResponseSerializer,
+    )
     def post(self, request, account_id):
         serializer = AccountRoleChangeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

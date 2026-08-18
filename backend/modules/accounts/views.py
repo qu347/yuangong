@@ -1,5 +1,5 @@
 from django.db import transaction
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -10,7 +10,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from modules.audit.services import record_audit_event
 
 from .serializers import (
+    ActiveUserTokenRefreshSerializer,
     CurrentUserSerializer,
+    LoginResponseSerializer,
     LoginSerializer,
     LogoutAllResponseSerializer,
     LogoutSerializer,
@@ -20,6 +22,7 @@ from .throttles import LoginRateThrottle
 from .tokens import revoke_all_user_tokens, revoke_refresh_token, validated_refresh_payload
 
 
+@extend_schema_view(post=extend_schema(request=LoginSerializer, responses=LoginResponseSerializer))
 class LoginView(TokenObtainPairView):
     authentication_classes = []
     permission_classes = [AllowAny]
@@ -27,6 +30,12 @@ class LoginView(TokenObtainPairView):
     throttle_classes = [LoginRateThrottle]
 
 
+@extend_schema_view(
+    post=extend_schema(
+        request=ActiveUserTokenRefreshSerializer,
+        responses=ActiveUserTokenRefreshSerializer,
+    )
+)
 class RefreshView(TokenRefreshView):
     authentication_classes = []
     permission_classes = [AllowAny]

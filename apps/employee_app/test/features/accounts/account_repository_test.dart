@@ -22,6 +22,21 @@ const accountJson = <String, dynamic>{
   'role': 'employee',
   'has_active_invitation': false,
   'email_mismatch': true,
+  'is_manageable': true,
+};
+
+const invitationJson = <String, dynamic>{
+  'id': '00000000-0000-0000-0000-000000000901',
+  'employee_id': '00000000-0000-0000-0000-000000000201',
+  'email': 'invite@example.invalid',
+  'username': 'invite.account',
+  'target_role': 'employee',
+  'status': 'pending',
+  'expires_at': '2026-08-20T08:00:00Z',
+  'send_count': 1,
+  'last_sent_at': '2026-08-18T08:00:00Z',
+  'created_at': '2026-08-18T08:00:00Z',
+  'updated_at': '2026-08-18T08:00:00Z',
 };
 
 void main() {
@@ -59,21 +74,7 @@ void main() {
     when(
       () =>
           apiClient.postMap(ApiEndpoints.invitations, data: any(named: 'data')),
-    ).thenAnswer(
-      (_) async => {
-        'id': '00000000-0000-0000-0000-000000000901',
-        'employee_id': '00000000-0000-0000-0000-000000000201',
-        'email': 'invite@example.invalid',
-        'username': 'invite.account',
-        'target_role': 'employee',
-        'status': 'pending',
-        'expires_at': '2026-08-20T08:00:00Z',
-        'send_count': 1,
-        'last_sent_at': '2026-08-18T08:00:00Z',
-        'created_at': '2026-08-18T08:00:00Z',
-        'updated_at': '2026-08-18T08:00:00Z',
-      },
-    );
+    ).thenAnswer((_) async => invitationJson);
 
     final invitation = await repository.createInvitation(
       employeeId: '00000000-0000-0000-0000-000000000201',
@@ -84,5 +85,19 @@ void main() {
 
     expect(invitation.status, 'pending');
     expect(invitation.username, 'invite.account');
+  });
+
+  test('loads invitations for resend and revoke management', () async {
+    final apiClient = MockAccountApiClient();
+    final repository = NetworkAccountRepository(apiClient);
+    when(
+      () => apiClient.getList(ApiEndpoints.invitations),
+    ).thenAnswer((_) async => [invitationJson]);
+
+    final invitations = await repository.fetchInvitations();
+
+    expect(invitations, hasLength(1));
+    expect(invitations.single.status, 'pending');
+    expect(invitations.single.sendCount, 1);
   });
 }

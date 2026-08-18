@@ -58,6 +58,9 @@ def login(user):
 @pytest.mark.django_db
 def test_account_list_is_system_admin_only(account_admin_data):
     _, users = account_admin_data
+    superuser = User.objects.create_superuser(
+        username="listed_protected_superuser", password=PASSWORD
+    )
 
     assert force_client().get("/api/v1/accounts/").status_code == 401
     assert force_client(users["employee"]).get("/api/v1/accounts/").status_code == 403
@@ -70,9 +73,17 @@ def test_account_list_is_system_admin_only(account_admin_data):
         item for item in response.json()["results"] if item["username"] == "managed_account"
     )
     assert result["role"] == "employee"
+    assert result["is_manageable"] is True
     assert result["employee"]["employee_no"] == "ACCOUNT-1"
     assert "password" not in result
     assert "groups" not in result
+    protected = {
+        item["username"]: item
+        for item in response.json()["results"]
+        if item["username"] in {users["system_admin"].username, superuser.username}
+    }
+    assert protected[users["system_admin"].username]["is_manageable"] is False
+    assert protected[superuser.username]["is_manageable"] is False
 
 
 @pytest.mark.django_db

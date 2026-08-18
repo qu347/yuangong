@@ -1,7 +1,10 @@
+from datetime import timedelta
+
 import pytest
 from django.contrib.auth.models import Group
 from django.core import mail
 from django.core.management import call_command
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from modules.accounts.models import AccountInvitation, User
@@ -167,3 +170,81 @@ def test_departed_or_linked_employee_cannot_be_invited(invitation_data):
     )
 
     assert response.status_code == 409
+
+
+@pytest.mark.django_db
+def test_expired_invitation_is_rejected_without_creating_account(invitation_data):
+    employee, users = invitation_data
+    created = client_for(users["system_admin"]).post(
+        "/api/v1/accounts/invitations/",
+        {
+            "employee_id": str(employee.id),
+            "username": "expired.invitation",
+            "email": "expired.invitation@example.invalid",
+            "target_role": "employee",
+        },
+        format="json",
+    )
+    assert created.status_code == 201
+    token = invitation_token_from_outbox()
+    AccountInvitation.objects.filter(pk=created.json()["id"]).update(
+        expires_at=timezone.now() - timedelta(seconds=1)
+    )
+
+    response = APIClient().post(
+        "/api/v1/auth/invitations/accept/",
+        {"token": token, "new_password": "Quartz!Forest7Harbor"},
+        format="json",
+    )
+
+    assert response.status_code == 400
+    employee.refresh_from_db()
+    assert employee.user_id is None
+    assert not User.objects.filter(username="expired.invitation").exists()
+
+
+@pytest.mark.django_db
+def test_open_invitation_username_and_email_are_unique(invitation_data):
+    employee, users = invitation_data
+    department = employee.department
+    other_employee = Employee.objects.create(
+        employee_no="INV-0002",
+        full_name="虚构重复邀请员工",
+        work_email="other.invitation@example.invalid",
+        department=department,
+    )
+    client = client_for(users["system_admin"])
+    first = client.post(
+        "/api/v1/accounts/invitations/",
+        {
+            "employee_id": str(employee.id),
+            "username": "unique.invitation",
+            "email": "unique.invitation@example.invalid",
+            "target_role": "employee",
+        },
+        format="json",
+    )
+    duplicate_username = client.post(
+        "/api/v1/accounts/invitations/",
+        {
+            "employee_id": str(other_employee.id),
+            "username": "unique.invitation",
+            "email": "other.invitation@example.invalid",
+            "target_role": "employee",
+        },
+        format="json",
+    )
+    duplicate_email = client.post(
+        "/api/v1/accounts/invitations/",
+        {
+            "employee_id": str(other_employee.id),
+            "username": "other.invitation",
+            "email": "UNIQUE.INVITATION@EXAMPLE.INVALID",
+            "target_role": "employee",
+        },
+        format="json",
+    )
+
+    assert first.status_code == 201
+    assert duplicate_username.status_code == 409
+    assert duplicate_email.status_code == 409

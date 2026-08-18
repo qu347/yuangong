@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 import pytest
 from django.core import mail
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from modules.accounts.models import AccountSession, PasswordResetChallenge, User
@@ -123,3 +126,46 @@ def test_authenticated_password_change_requires_current_password_and_revokes_cur
     assert user.check_password(NEW_PASSWORD)
     assert client.get("/api/v1/me/").status_code == 401
     assert AuditEvent.objects.filter(action="password_changed").count() == 1
+
+
+@pytest.mark.django_db
+def test_new_password_reset_request_revokes_old_code_and_expired_code_fails():
+    user = User.objects.create_user(
+        username="reset_rotation",
+        email="reset.rotation@example.invalid",
+        password=PASSWORD,
+    )
+    client = APIClient()
+    first = client.post(
+        "/api/v1/auth/password-reset/request/",
+        {"identifier": user.username},
+        format="json",
+    )
+    assert first.status_code == 202
+    old_token = reset_token_from_outbox()
+    second = client.post(
+        "/api/v1/auth/password-reset/request/",
+        {"identifier": user.username},
+        format="json",
+    )
+    assert second.status_code == 202
+    new_token = reset_token_from_outbox()
+
+    old_confirm = client.post(
+        "/api/v1/auth/password-reset/confirm/",
+        {"token": old_token, "new_password": NEW_PASSWORD},
+        format="json",
+    )
+    assert old_confirm.status_code == 400
+    challenge = PasswordResetChallenge.objects.get(revoked_at=None, used_at=None)
+    challenge.expires_at = timezone.now() - timedelta(seconds=1)
+    challenge.save(update_fields=["expires_at"])
+    expired_confirm = client.post(
+        "/api/v1/auth/password-reset/confirm/",
+        {"token": new_token, "new_password": NEW_PASSWORD},
+        format="json",
+    )
+
+    assert expired_confirm.status_code == 400
+    user.refresh_from_db()
+    assert user.check_password(PASSWORD)

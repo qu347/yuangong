@@ -63,8 +63,24 @@ class LoginSerializer(serializers.Serializer):
         }
 
 
+class LoginSessionSerializer(serializers.Serializer):
+    id = serializers.UUIDField(read_only=True)
+    client_platform = serializers.ChoiceField(
+        choices=AccountSession.ClientPlatform.choices,
+        read_only=True,
+    )
+    client_name = serializers.CharField(read_only=True)
+    app_version = serializers.CharField(read_only=True)
+
+
+class LoginResponseSerializer(serializers.Serializer):
+    access = serializers.CharField(read_only=True)
+    refresh = serializers.CharField(read_only=True)
+    session = LoginSessionSerializer(read_only=True)
+
+
 class ActiveUserTokenRefreshSerializer(serializers.Serializer):
-    refresh = serializers.CharField(write_only=True, trim_whitespace=False)
+    refresh = serializers.CharField(trim_whitespace=False)
     access = serializers.CharField(read_only=True)
 
     def validate(self, attrs):

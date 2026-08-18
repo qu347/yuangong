@@ -82,6 +82,8 @@ Invoke-Checked "PostgreSQL pytest" {
         -e DJANGO_SETTINGS_MODULE=config.settings.test `
         -e TEST_DATABASE_ENGINE=postgresql `
         -e EXPECTED_DATABASE_VENDOR=postgresql `
+        -e TEST_CACHE_ENGINE=redis `
+        -e REDIS_URL=redis://redis:6379/15 `
         api python -m pytest -q
 }
 
