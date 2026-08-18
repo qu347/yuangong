@@ -106,7 +106,7 @@ void main() {
     expect(passwordField.obscureText, isTrue);
     await tester.tap(find.byKey(const Key('login_submit')));
     await tester.pump();
-    expect(find.text('请输入登录名'), findsOneWidget);
+    expect(find.text('请输入用户名或工作邮箱'), findsOneWidget);
     expect(find.text('请输入密码'), findsOneWidget);
   });
 

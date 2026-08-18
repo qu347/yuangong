@@ -9,4 +9,12 @@ abstract final class ApiEndpoints {
   static const positions = 'positions/';
   static const employees = 'employees/';
   static const auditEvents = 'audit-events/';
+  static const invitationAccept = 'auth/invitations/accept/';
+  static const passwordResetRequest = 'auth/password-reset/request/';
+  static const passwordResetConfirm = 'auth/password-reset/confirm/';
+  static const passwordChange = 'auth/password/change/';
+  static const sessions = 'auth/sessions/';
+  static const revokeOtherSessions = 'auth/sessions/revoke-others/';
+  static const accounts = 'accounts/';
+  static const invitations = 'accounts/invitations/';
 }

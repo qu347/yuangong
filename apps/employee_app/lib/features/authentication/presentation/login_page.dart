@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/failure.dart';
 import 'auth_controller.dart';
@@ -96,13 +97,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           textInputAction: TextInputAction.next,
                           autofillHints: const [AutofillHints.username],
                           decoration: const InputDecoration(
-                            labelText: '登录名',
+                            labelText: '用户名或工作邮箱',
                             prefixIcon: Icon(Icons.person_outline_rounded),
                             border: OutlineInputBorder(),
                           ),
                           validator: (value) =>
                               value == null || value.trim().isEmpty
-                              ? '请输入登录名'
+                              ? '请输入用户名或工作邮箱'
                               : null,
                         ),
                         const SizedBox(height: 16),
@@ -162,6 +163,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                   ),
                                 )
                               : const Text('登录'),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: auth.isLoading
+                              ? null
+                              : () => context.go('/forgot-password'),
+                          child: const Text('忘记密码'),
+                        ),
+                        TextButton(
+                          onPressed: auth.isLoading
+                              ? null
+                              : () => context.go('/accept-invitation'),
+                          child: const Text('接受账号邀请'),
                         ),
                       ],
                     ),

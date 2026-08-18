@@ -35,6 +35,12 @@ const appDestinations = <AppDestination>[
     icon: Icons.account_tree_outlined,
     selectedIcon: Icons.account_tree_rounded,
   ),
+  AppDestination(
+    label: '安全',
+    path: '/settings/security',
+    icon: Icons.security_outlined,
+    selectedIcon: Icons.security_rounded,
+  ),
 ];
 
 class AdaptiveShell extends StatelessWidget {
