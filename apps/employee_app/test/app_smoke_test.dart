@@ -37,10 +37,13 @@ class SmokeAuthRepository implements AuthRepository {
   Future<void> logout() async {}
 
   @override
+  Future<int> logoutAll() async => 0;
+
+  @override
   Future<CurrentUser?> restoreSession() async => smokeTestUser;
 }
 
-class SmokeEmployeeRepository implements EmployeeRepository {
+class SmokeEmployeeRepository extends EmployeeRepository {
   @override
   Future<Employee> fetchEmployee(String id) => throw UnimplementedError();
 
@@ -56,7 +59,7 @@ class SmokeEmployeeRepository implements EmployeeRepository {
       const EmployeePage(count: 0, next: null, previous: null, results: []);
 }
 
-class SmokeDepartmentRepository implements DepartmentRepository {
+class SmokeDepartmentRepository extends DepartmentRepository {
   @override
   Future<List<Department>> fetchDepartments() async => const [];
 }

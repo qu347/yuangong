@@ -27,7 +27,7 @@ final detailEmployee = Employee(
   hireDate: DateTime(2023, 5, 8),
 );
 
-class DetailEmployeeRepository implements EmployeeRepository {
+class DetailEmployeeRepository extends EmployeeRepository {
   DetailEmployeeRepository(this.response);
 
   Object response;

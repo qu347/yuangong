@@ -58,8 +58,6 @@ class Position(models.Model):
     name = models.CharField(max_length=100)
     department = models.ForeignKey(
         Department,
-        null=True,
-        blank=True,
         on_delete=models.PROTECT,
         related_name="positions",
     )

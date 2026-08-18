@@ -99,6 +99,13 @@ def test_me_returns_clear_null_directory_fields_for_unlinked_user(
         "employee_no": None,
         "department": None,
         "roles": [],
+        "capabilities": {
+            "can_manage_employees": False,
+            "can_manage_departments": False,
+            "can_manage_positions": False,
+            "can_view_audit": False,
+            "can_logout_all": True,
+        },
     }
 
 
@@ -127,3 +134,10 @@ def test_me_returns_linked_employee_and_role_summary(client, active_user, login_
         "name": "市场部",
     }
     assert response.json()["roles"] == ["employee"]
+    assert response.json()["capabilities"] == {
+        "can_manage_employees": False,
+        "can_manage_departments": False,
+        "can_manage_positions": False,
+        "can_view_audit": False,
+        "can_logout_all": True,
+    }

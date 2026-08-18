@@ -60,4 +60,49 @@ void main() {
       ),
     );
   });
+
+  test('creates, updates, and deactivates a department', () async {
+    const departmentJson = <String, dynamic>{
+      'id': '00000000-0000-0000-0000-000000000301',
+      'code': 'HQ',
+      'name': '企业总部',
+      'parent': null,
+      'status': 'active',
+      'sort_order': 10,
+    };
+    when(
+      () =>
+          apiClient.postMap(ApiEndpoints.departments, data: any(named: 'data')),
+    ).thenAnswer((_) async => departmentJson);
+    when(
+      () => apiClient.patchMap(
+        '${ApiEndpoints.departments}${departmentJson['id']}/',
+        data: any(named: 'data'),
+      ),
+    ).thenAnswer((_) async => {...departmentJson, 'name': '企业总部（更新）'});
+    when(
+      () => apiClient.postMap(
+        '${ApiEndpoints.departments}${departmentJson['id']}/deactivate/',
+        data: const {},
+      ),
+    ).thenAnswer(
+      (_) async => {
+        'department': {...departmentJson, 'status': 'inactive'},
+        'changed': true,
+      },
+    );
+
+    final created = await repository.createDepartment({
+      'code': 'HQ',
+      'name': '企业总部',
+    });
+    final updated = await repository.updateDepartment(created.id, {
+      'name': '企业总部（更新）',
+    });
+    final deactivated = await repository.deactivateDepartment(created.id);
+
+    expect(updated.name, '企业总部（更新）');
+    expect(deactivated.changed, isTrue);
+    expect(deactivated.department.isActive, isFalse);
+  });
 }

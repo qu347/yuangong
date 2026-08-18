@@ -35,7 +35,7 @@ $env:EXPECTED_DATABASE_VENDOR = "postgresql"
 
 ## 演示账号与目录数据
 
-`seed_demo_data` 幂等创建 4 个部门、6 个岗位、12 名虚构员工和三类 Group。密码必须来自当前进程 `EMPLOYEE_DEMO_PASSWORD`，命令不会输出该值：
+`seed_demo_data` 幂等创建 4 个部门、6 个岗位、12 名虚构员工和三类 Group，并调用与部署相同的 RBAC 同步服务。密码必须来自当前进程 `EMPLOYEE_DEMO_PASSWORD`，命令不会输出该值：
 
 ```powershell
 $securePassword = Read-Host "演示账号密码" -AsSecureString
@@ -47,7 +47,16 @@ try {
 }
 ```
 
-开发登录名为 `demo.employee`。`employee`、`hr_admin`、`system_admin` 本阶段都能读取目录；目录写 API 不存在。Django Admin 仍要求 `is_staff` 或超级用户。
+开发登录名为 `demo.employee`。`employee` 只读；`hr_admin` 与 `system_admin` 可维护 Department、Position、Employee，执行状态 action 并读取审计。Django Admin 仍要求 `is_staff` 或超级用户。
+
+迁移后或权限定义变化时幂等同步 RBAC：
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe manage.py sync_rbac
+```
+
+该命令只补充所需权限，不清除额外权限。目录对象没有 DELETE API；不要使用数据库命令绕过 service 的事务、状态规则和审计。
 
 ## Flutter 配置
 
@@ -70,3 +79,10 @@ flutter pub get
 ```
 
 执行前后都要审查工作区，确认命令没有新增 iOS、Web、macOS 或 Linux 目录，也没有覆盖业务实现。
+
+## 本机已知兼容项
+
+- Flutter 3.47 在中文工作区可能误算 LSP Content-Length。使用 `scripts/check.ps1`；其中的 `flutter-analysis.ps1` 会创建、验证并删除临时 ASCII junction。
+- Windows CMake/MSBuild 无 CPU 进展时，只在当前构建进程设置 `TrackFileAccess=false`，不要持久修改 Visual Studio 或系统配置。
+- 新 PowerShell 应从真实用户环境继承 `GRADLE_USER_HOME=D:\DevCaches\Gradle` 与 `PUB_CACHE=D:\DevCaches\Pub\Cache`。不要使用隔离 Gradle 目录、人工 Maven 缓存、临时代理或 `--offline` 绕过构建。
+- Android aapt 36 无法直接读取中文路径 APK 时，Flutter 会回退源 Manifest；必须继续用 ADB 安装、PID、前台 Activity 和包级 FATAL 日志确认真实结果。

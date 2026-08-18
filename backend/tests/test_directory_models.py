@@ -51,6 +51,10 @@ def test_directory_models_use_uuid_ids_timestamps_and_expected_defaults():
     ],
 )
 def test_department_and_position_codes_are_unique(model, first, duplicate):
+    if model is Position:
+        department = Department.objects.create(code="OPS-DEP", name="运营部门")
+        first["department"] = department
+        duplicate["department"] = department
     model.objects.create(**first)
 
     with pytest.raises(ValidationError):
@@ -74,6 +78,14 @@ def test_employee_number_is_unique():
 
     with pytest.raises(ValidationError):
         duplicate.full_clean()
+
+
+@pytest.mark.django_db
+def test_position_requires_a_department():
+    position = Position(code="NO-DEP", name="无部门岗位")
+
+    with pytest.raises(ValidationError, match="department"):
+        position.full_clean()
 
 
 @pytest.mark.django_db

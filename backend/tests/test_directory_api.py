@@ -1,6 +1,7 @@
 from datetime import date
 
 import pytest
+from django.utils.dateparse import parse_datetime
 from rest_framework.test import APIClient
 
 from modules.accounts.models import User
@@ -142,11 +143,11 @@ def test_department_and_position_lists_return_directory_safe_fields(
         "/api/v1/employees/",
     ],
 )
-def test_directory_endpoints_do_not_expose_write_methods(
+def test_directory_write_endpoints_reject_users_without_model_permissions(
     path,
     authenticated_client,
 ):
-    assert authenticated_client.post(path, {}, format="json").status_code == 405
+    assert authenticated_client.post(path, {}, format="json").status_code == 403
 
 
 @pytest.mark.django_db
@@ -238,7 +239,9 @@ def test_employee_detail_returns_only_directory_fields(authenticated_client, dir
     response = authenticated_client.get(f"/api/v1/employees/{employee.id}/")
 
     assert response.status_code == 200
-    assert response.json() == {
+    payload = response.json()
+    assert parse_datetime(payload.pop("updated_at")) == employee.updated_at
+    assert payload == {
         "id": str(employee.id),
         "employee_no": "EMP-0001",
         "full_name": "林知远",

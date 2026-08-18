@@ -43,6 +43,7 @@ class AdaptiveShell extends StatelessWidget {
     required this.onDestinationSelected,
     required this.child,
     this.onLogout,
+    this.onLogoutAll,
     super.key,
   });
 
@@ -50,6 +51,7 @@ class AdaptiveShell extends StatelessWidget {
   final ValueChanged<int> onDestinationSelected;
   final Widget child;
   final VoidCallback? onLogout;
+  final VoidCallback? onLogoutAll;
 
   int get _selectedIndex {
     final index = appDestinations.indexWhere(
@@ -92,16 +94,28 @@ class AdaptiveShell extends StatelessWidget {
                             )
                           : const _BrandMark(),
                     ),
-                    trailing: onLogout == null
+                    trailing: onLogout == null && onLogoutAll == null
                         ? null
-                        : Padding(
-                            padding: const EdgeInsets.only(top: 18),
-                            child: IconButton(
-                              key: const Key('shell_logout'),
-                              tooltip: '退出登录',
-                              onPressed: onLogout,
-                              icon: const Icon(Icons.logout_rounded),
-                            ),
+                        : Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (onLogoutAll != null)
+                                IconButton(
+                                  key: const Key('shell_logout_all'),
+                                  tooltip: '退出所有设备',
+                                  onPressed: onLogoutAll,
+                                  icon: const Icon(
+                                    Icons.phonelink_erase_outlined,
+                                  ),
+                                ),
+                              if (onLogout != null)
+                                IconButton(
+                                  key: const Key('shell_logout'),
+                                  tooltip: '退出登录',
+                                  onPressed: onLogout,
+                                  icon: const Icon(Icons.logout_rounded),
+                                ),
+                            ],
                           ),
                     destinations: [
                       for (final destination in appDestinations)
@@ -131,6 +145,13 @@ class AdaptiveShell extends StatelessWidget {
               ],
             ),
             actions: [
+              if (onLogoutAll != null)
+                IconButton(
+                  key: const Key('shell_logout_all'),
+                  tooltip: '退出所有设备',
+                  onPressed: onLogoutAll,
+                  icon: const Icon(Icons.phonelink_erase_outlined),
+                ),
               if (onLogout != null)
                 IconButton(
                   key: const Key('shell_logout'),

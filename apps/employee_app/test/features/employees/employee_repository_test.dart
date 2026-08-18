@@ -1,3 +1,4 @@
+import 'package:employee_app/core/errors/app_exception.dart';
 import 'package:employee_app/core/errors/failure.dart';
 import 'package:employee_app/core/network/api_client.dart';
 import 'package:employee_app/core/network/api_endpoints.dart';
@@ -25,6 +26,7 @@ const employeeJson = <String, dynamic>{
   },
   'employment_status': 'active',
   'hire_date': '2023-05-08',
+  'updated_at': '2026-08-17T15:30:00+08:00',
 };
 
 void main() {
@@ -146,6 +148,65 @@ void main() {
       repository.fetchEmployees(page: 1, pageSize: 20),
       throwsA(
         isA<Failure>().having((error) => error.type, 'type', FailureType.data),
+      ),
+    );
+  });
+
+  test('creates, patches, and performs employee status actions', () async {
+    final input = <String, dynamic>{
+      'employee_no': 'EMP-0001',
+      'full_name': '林知远',
+      'department': '00000000-0000-0000-0000-000000000301',
+    };
+    when(
+      () => apiClient.postMap(ApiEndpoints.employees, data: input),
+    ).thenAnswer((_) async => employeeJson);
+    when(
+      () => apiClient.patchMap(
+        '${ApiEndpoints.employees}${employeeJson['id']}/',
+        data: any(named: 'data'),
+      ),
+    ).thenAnswer((_) async => {...employeeJson, 'full_name': '林知远（更新）'});
+    when(
+      () => apiClient.postMap(
+        '${ApiEndpoints.employees}${employeeJson['id']}/depart/',
+        data: const {},
+      ),
+    ).thenAnswer(
+      (_) async => {
+        'employee': {...employeeJson, 'employment_status': 'departed'},
+        'changed': true,
+      },
+    );
+
+    final created = await repository.createEmployee(input);
+    final updated = await repository.updateEmployee(created.id, {
+      'full_name': '林知远（更新）',
+      'expected_updated_at': created.updatedAt!.toIso8601String(),
+    });
+    final departed = await repository.departEmployee(created.id);
+
+    expect(updated.fullName, '林知远（更新）');
+    expect(departed.changed, isTrue);
+    expect(departed.employee.isActive, isFalse);
+  });
+
+  test('maps stale object conflict to a reload-safe failure', () async {
+    when(
+      () => apiClient.patchMap(
+        '${ApiEndpoints.employees}${employeeJson['id']}/',
+        data: any(named: 'data'),
+      ),
+    ).thenThrow(const AppException.conflict('stale_object'));
+
+    await expectLater(
+      repository.updateEmployee(employeeJson['id']! as String, {
+        'full_name': '冲突更新',
+      }),
+      throwsA(
+        isA<Failure>()
+            .having((failure) => failure.type, 'type', FailureType.conflict)
+            .having((failure) => failure.message, 'message', contains('重新加载')),
       ),
     );
   });

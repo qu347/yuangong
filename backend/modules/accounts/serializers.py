@@ -1,12 +1,26 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 
 
 class LoginSerializer(TokenObtainPairSerializer):
     default_error_messages = {
         "no_active_account": "登录名或密码错误。",
     }
+
+
+class ActiveUserTokenRefreshSerializer(TokenRefreshSerializer):
+    default_error_messages = {
+        "no_active_account": "账号已停用，无法刷新会话。",
+    }
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField(write_only=True, trim_whitespace=False)
+
+
+class LogoutAllResponseSerializer(serializers.Serializer):
+    revoked_sessions = serializers.IntegerField(min_value=0, read_only=True)
 
 
 class CurrentUserDepartmentSerializer(serializers.Serializer):
@@ -23,6 +37,7 @@ class CurrentUserSerializer(serializers.Serializer):
     employee_no = serializers.SerializerMethodField()
     department = serializers.SerializerMethodField()
     roles = serializers.SerializerMethodField()
+    capabilities = serializers.SerializerMethodField()
 
     @staticmethod
     def _employee(user):
@@ -63,3 +78,19 @@ class CurrentUserSerializer(serializers.Serializer):
         if user.is_superuser:
             roles.add("system_admin")
         return sorted(roles)
+
+    @extend_schema_field(serializers.DictField(child=serializers.BooleanField(), read_only=True))
+    def get_capabilities(self, user):
+        return {
+            "can_manage_employees": user.has_perms(
+                ("employees.add_employee", "employees.change_employee")
+            ),
+            "can_manage_departments": user.has_perms(
+                ("organizations.add_department", "organizations.change_department")
+            ),
+            "can_manage_positions": user.has_perms(
+                ("organizations.add_position", "organizations.change_position")
+            ),
+            "can_view_audit": user.has_perm("audit.view_auditevent"),
+            "can_logout_all": user.is_authenticated,
+        }

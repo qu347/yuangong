@@ -20,7 +20,7 @@ class RecordedEmployeeRequest {
   final int page;
 }
 
-class FakeEmployeeRepository implements EmployeeRepository {
+class FakeEmployeeRepository extends EmployeeRepository {
   final requests = <RecordedEmployeeRequest>[];
   final responses = <Object>[];
 
