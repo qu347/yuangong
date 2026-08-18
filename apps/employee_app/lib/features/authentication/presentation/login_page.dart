@@ -166,6 +166,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                         const SizedBox(height: 8),
                         TextButton(
+                          key: const Key('login_accept_invitation'),
                           onPressed: auth.isLoading
                               ? null
                               : () => context.go('/forgot-password'),

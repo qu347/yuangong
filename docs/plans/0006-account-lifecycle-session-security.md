@@ -1,5 +1,7 @@
 # Account Lifecycle and Session Security Implementation Plan
 
+> 执行状态（2026-08-18）：本地实现和 SQLite/PostgreSQL/Redis/Mailpit/Windows/Android 验收已完成；远端 CI 因本阶段未获 push 授权而未运行，最终状态为 PASSED WITH WARNINGS。真实命令、数量和产物见 `docs/account-lifecycle-security-validation-report.md`。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Deliver secure account invitation, password recovery, account administration, per-device sessions with immediate JWT revocation, Flutter security/admin flows, Mailpit development email, and foundational cross-platform CI.

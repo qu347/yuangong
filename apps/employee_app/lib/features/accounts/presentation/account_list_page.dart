@@ -78,6 +78,7 @@ class _AccountPanel extends ConsumerWidget {
     data: (page) => page.results.isEmpty
         ? const Center(child: Text('暂无账号'))
         : ListView.separated(
+            key: const Key('account_list'),
             itemCount: page.results.length,
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, index) {

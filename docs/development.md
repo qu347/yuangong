@@ -31,6 +31,23 @@ $env:EXPECTED_DATABASE_VENDOR = "postgresql"
 
 `config.settings.test` 只从环境变量读取 PostgreSQL 数据库名、用户、密码、主机和端口；不要把数据库密码写入源码或文档。GitHub Actions backend job 设置相同模式，因此已启动的 PostgreSQL service 会被测试实际使用。
 
+PostgreSQL/Redis 全量模式通过 `scripts/check.ps1` 的 one-off 容器运行，Redis 使用隔离测试 DB。不要把测试数据库、Redis 数据、Mailpit 邮件或任何凭据加入缓存/产物。
+
+## 账号安全与本地邮件
+
+- `User.username` 是稳定账号标识；登录请求使用 `identifier`，可传用户名或大小写不敏感的账号邮箱。
+- `User.email` 用于登录、邀请和恢复，和目录字段 `Employee.work_email` 分开维护；两者不一致时管理界面提示，但不自动同步。
+- 密码至少 12 个字符，并复用 Django common/numeric/similarity validators。后端是最终权威。
+- 邀请默认 48 小时、重置码默认 30 分钟；数据库只保存摘要，普通 API 和日志不返回一次性码。
+
+启动本地邮件捕获：
+
+```powershell
+docker compose -f .\deploy\docker-compose.dev.yml up -d --build
+```
+
+Mailpit UI 为 `http://127.0.0.1:8025`，只允许 `.invalid` 虚构收件人。生产设置必须显式配置邮件后端、主机、端口和发件人，不默认回退 Mailpit。
+
 开发服务器监听 `0.0.0.0:8000` 仅用于受信任局域网。
 
 ## 演示账号与目录数据
