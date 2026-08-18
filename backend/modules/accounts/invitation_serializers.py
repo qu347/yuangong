@@ -1,4 +1,5 @@
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .models import AccountInvitation
@@ -25,6 +26,7 @@ class AccountInvitationSerializer(serializers.ModelSerializer):
         )
         read_only_fields = fields
 
+    @extend_schema_field(serializers.CharField())
     def get_status(self, invitation):
         if invitation.accepted_at is not None:
             return "accepted"

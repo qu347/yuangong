@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .account_services import managed_role
@@ -33,13 +34,16 @@ class AccountSerializer(serializers.ModelSerializer):
         )
         read_only_fields = fields
 
+    @extend_schema_field(AccountEmployeeSerializer(allow_null=True))
     def get_employee(self, user):
         employee = getattr(user, "employee_profile", None)
         return AccountEmployeeSerializer(employee).data if employee else None
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_role(self, user):
         return managed_role(user)
 
+    @extend_schema_field(serializers.BooleanField())
     def get_has_active_invitation(self, user):
         employee = getattr(user, "employee_profile", None)
         if employee is None:
@@ -50,6 +54,7 @@ class AccountSerializer(serializers.ModelSerializer):
             revoked_at=None,
         ).exists()
 
+    @extend_schema_field(serializers.BooleanField())
     def get_email_mismatch(self, user):
         employee = getattr(user, "employee_profile", None)
         return bool(

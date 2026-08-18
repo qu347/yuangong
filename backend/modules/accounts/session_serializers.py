@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .models import AccountSession
@@ -20,6 +21,7 @@ class AccountSessionSerializer(serializers.ModelSerializer):
         )
         read_only_fields = fields
 
+    @extend_schema_field(serializers.BooleanField())
     def get_is_current(self, session):
         return str(session.id) == str(self.context.get("current_sid"))
 

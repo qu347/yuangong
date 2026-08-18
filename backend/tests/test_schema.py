@@ -31,6 +31,11 @@ def test_openapi_schema_describes_jwt_authentication_endpoints():
         "scheme": "bearer",
         "bearerFormat": "JWT",
     }
+    assert schema["components"]["securitySchemes"]["sessionJwtAuth"] == {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+    }
 
 
 @pytest.mark.django_db

@@ -5,6 +5,8 @@ $RepositoryRoot = Split-Path -Parent $PSScriptRoot
 $BackendRoot = Join-Path $RepositoryRoot "backend"
 $FlutterRoot = Join-Path $RepositoryRoot "apps\employee_app"
 $ComposeFile = Join-Path $RepositoryRoot "deploy\docker-compose.dev.yml"
+$RepositorySafetyScript = Join-Path $PSScriptRoot "repository-safety.ps1"
+$SchemaFile = Join-Path ([System.IO.Path]::GetTempPath()) "employee-management-openapi-$PID.yaml"
 . (Join-Path $PSScriptRoot "python-command.ps1")
 . (Join-Path $PSScriptRoot "flutter-analysis.ps1")
 
@@ -49,12 +51,40 @@ Push-Location $BackendRoot
 try {
     Invoke-Checked "Ruff format check" { & $PythonExecutable @PythonPrefixArguments -m ruff format --check --no-cache . }
     Invoke-Checked "Ruff lint" { & $PythonExecutable @PythonPrefixArguments -m ruff check --no-cache . }
-    Invoke-Checked "Django check" { & $PythonExecutable @PythonPrefixArguments manage.py check }
-    Invoke-Checked "pytest" { & $PythonExecutable @PythonPrefixArguments -m pytest }
+    Invoke-Checked "Django check" { & $PythonExecutable @PythonPrefixArguments manage.py check --settings=config.settings.test }
+    Invoke-Checked "Migration drift check" {
+        & $PythonExecutable @PythonPrefixArguments manage.py makemigrations --check --dry-run --settings=config.settings.test
+    }
+    Invoke-Checked "SQLite pytest" { & $PythonExecutable @PythonPrefixArguments -m pytest -q }
+    Invoke-Checked "Strict OpenAPI validation" {
+        & $PythonExecutable @PythonPrefixArguments manage.py spectacular --validate --fail-on-warn --settings=config.settings.test --file $SchemaFile
+    }
 } finally {
     Pop-Location
+    if (Test-Path -LiteralPath $SchemaFile -PathType Leaf) {
+        Remove-Item -LiteralPath $SchemaFile -Force
+    }
 }
 
 Invoke-Checked "Docker Compose config validation" {
     docker compose -f $ComposeFile config --quiet
+}
+
+Invoke-Checked "Redis health probe" {
+    docker compose -f $ComposeFile exec -T redis redis-cli ping
+}
+
+Invoke-Checked "PostgreSQL pytest" {
+    docker compose -f $ComposeFile run --rm -T --no-deps `
+        -v "${RepositoryRoot}\.github:/app/.github:ro" `
+        -v "${RepositoryRoot}\scripts:/app/scripts:ro" `
+        -v "${RepositoryRoot}\deploy:/app/deploy:ro" `
+        -e DJANGO_SETTINGS_MODULE=config.settings.test `
+        -e TEST_DATABASE_ENGINE=postgresql `
+        -e EXPECTED_DATABASE_VENDOR=postgresql `
+        api python -m pytest -q
+}
+
+Invoke-Checked "Repository safety baseline" {
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $RepositorySafetyScript
 }
