@@ -26,6 +26,17 @@ class AuditEvent(models.Model):
         ACCOUNT_DEACTIVATE = "account_deactivate", "账号停用"
         LOGOUT = "logout", "退出"
         LOGOUT_ALL = "logout_all", "退出全部会话"
+        SESSION_REVOKED = "session_revoked", "会话撤销"
+        OTHER_SESSIONS_REVOKED = "other_sessions_revoked", "其他会话撤销"
+        ALL_SESSIONS_REVOKED = "all_sessions_revoked", "全部会话撤销"
+        ACCOUNT_INVITATION_CREATED = "account_invitation_created", "账号邀请创建"
+        ACCOUNT_INVITATION_RESENT = "account_invitation_resent", "账号邀请重发"
+        ACCOUNT_INVITATION_REVOKED = "account_invitation_revoked", "账号邀请撤销"
+        ACCOUNT_INVITATION_ACCEPTED = "account_invitation_accepted", "账号邀请接受"
+        PASSWORD_CHANGED = "password_changed", "密码修改"
+        PASSWORD_RESET_COMPLETED = "password_reset_completed", "密码重置完成"
+        ACCOUNT_ACTIVATED = "account_activated", "账号恢复"
+        ACCOUNT_ROLE_CHANGED = "account_role_changed", "账号角色变更"
 
     class Source(models.TextChoices):
         API = "api", "API"

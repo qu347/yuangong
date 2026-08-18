@@ -55,6 +55,13 @@ def test_seed_demo_data_is_idempotent_and_uses_only_fictional_directory_data(mon
         ("organizations", "change_position"),
         ("organizations", "view_position"),
     }
+    expected_system_permissions = expected_management_permissions | {
+        ("accounts", "view_user"),
+        ("accounts", "change_user"),
+        ("accounts", "add_accountinvitation"),
+        ("accounts", "view_accountinvitation"),
+        ("accounts", "change_accountinvitation"),
+    }
     assert (
         set(
             Group.objects.get(name="hr_admin").permissions.values_list(
@@ -69,7 +76,7 @@ def test_seed_demo_data_is_idempotent_and_uses_only_fictional_directory_data(mon
                 "content_type__app_label", "codename"
             )
         )
-        == expected_management_permissions
+        == expected_system_permissions
     )
     assert all(
         employee.work_email.endswith("@example.test")

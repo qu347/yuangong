@@ -7,7 +7,7 @@ from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, Ou
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 
-def _validated_refresh_payload(raw_token):
+def validated_refresh_payload(raw_token):
     try:
         unverified = RefreshToken(raw_token, verify=False)
         payload = unverified.get_token_backend().decode(raw_token, verify=True)
@@ -22,7 +22,7 @@ def _validated_refresh_payload(raw_token):
 
 @transaction.atomic
 def revoke_refresh_token(raw_token, *, user):
-    payload = _validated_refresh_payload(raw_token)
+    payload = validated_refresh_payload(raw_token)
     if str(payload[api_settings.USER_ID_CLAIM]) != str(getattr(user, api_settings.USER_ID_FIELD)):
         raise PermissionDenied("不能吊销其他用户的会话。")
 

@@ -11,3 +11,9 @@ CORS_ALLOWED_ORIGINS = env.list(  # noqa: F405
     default=["http://localhost:3000"],
 )
 API_DOCS_ENABLED = env.bool("DJANGO_API_DOCS_ENABLED", default=True)
+EMAIL_BACKEND = env(
+    "DJANGO_EMAIL_BACKEND",
+    default="django.core.mail.backends.smtp.EmailBackend",
+)
+EMAIL_HOST = env("DJANGO_EMAIL_HOST", default="mailpit")
+EMAIL_PORT = env.int("DJANGO_EMAIL_PORT", default=1025)

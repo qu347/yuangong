@@ -28,3 +28,15 @@ else:
     }
 
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "employee-management-tests",
+    }
+}
+REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {  # noqa: F405
+    "account_login": "10000/minute",
+    "invitation_accept": "10000/hour",
+    "password_reset_confirm": "10000/hour",
+}

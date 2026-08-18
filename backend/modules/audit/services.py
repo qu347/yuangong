@@ -18,6 +18,14 @@ SAFE_CHANGE_FIELDS = {
     "employment_status",
     "is_active",
     "revoked_sessions",
+    "session_id",
+    "client_platform",
+    "revoked_reason",
+    "username",
+    "email",
+    "target_role",
+    "role",
+    "send_count",
 }
 SENSITIVE_KEY_FRAGMENTS = {
     "authorization",
