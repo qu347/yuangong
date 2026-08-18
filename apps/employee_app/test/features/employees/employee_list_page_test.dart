@@ -38,7 +38,7 @@ final listPage = EmployeePage(
   results: [listEmployee],
 );
 
-class PageEmployeeRepository implements EmployeeRepository {
+class PageEmployeeRepository extends EmployeeRepository {
   final responses = <Object>[];
   Completer<EmployeePage>? pending;
   int requestCount = 0;
@@ -70,7 +70,7 @@ class PageEmployeeRepository implements EmployeeRepository {
   }
 }
 
-class PageDepartmentRepository implements DepartmentRepository {
+class PageDepartmentRepository extends DepartmentRepository {
   @override
   Future<List<Department>> fetchDepartments() async => const [
     Department(

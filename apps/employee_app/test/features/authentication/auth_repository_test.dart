@@ -54,6 +54,13 @@ const currentUserPayload = <String, dynamic>{
     'name': '研发中心',
   },
   'roles': ['employee'],
+  'capabilities': {
+    'can_manage_employees': true,
+    'can_manage_departments': true,
+    'can_manage_positions': false,
+    'can_view_audit': true,
+    'can_logout_all': true,
+  },
 };
 
 void main() {
@@ -91,6 +98,8 @@ void main() {
 
     expect(user.employeeNo, 'EMP-0001');
     expect(user.department?.name, '研发中心');
+    expect(user.capabilities.canManageEmployees, isTrue);
+    expect(user.capabilities.canManagePositions, isFalse);
     expect(tokenStorage.accessToken, 'access-test-value');
     expect(tokenStorage.refreshToken, 'refresh-test-value');
   });
@@ -129,15 +138,61 @@ void main() {
     },
   );
 
-  test('logout clears both persisted tokens', () async {
-    tokenStorage
-      ..accessToken = 'access-test-value'
-      ..refreshToken = 'refresh-test-value';
+  test(
+    'logout calls the server before clearing both persisted tokens',
+    () async {
+      tokenStorage
+        ..accessToken = 'access-test-value'
+        ..refreshToken = 'refresh-test-value';
+      when(
+        () => apiClient.postVoid(
+          ApiEndpoints.logout,
+          data: {'refresh': 'refresh-test-value'},
+        ),
+      ).thenAnswer((_) async {});
 
-    await repository.logout();
+      await repository.logout();
 
-    expect(tokenStorage.clearCount, 1);
-    expect(tokenStorage.accessToken, isNull);
-    expect(tokenStorage.refreshToken, isNull);
+      verify(
+        () => apiClient.postVoid(
+          ApiEndpoints.logout,
+          data: {'refresh': 'refresh-test-value'},
+        ),
+      ).called(1);
+      expect(tokenStorage.clearCount, 1);
+      expect(tokenStorage.accessToken, isNull);
+      expect(tokenStorage.refreshToken, isNull);
+    },
+  );
+
+  test(
+    'logout still clears local tokens when the server is unavailable',
+    () async {
+      tokenStorage
+        ..accessToken = 'access-test-value'
+        ..refreshToken = 'refresh-test-value';
+      when(
+        () => apiClient.postVoid(
+          ApiEndpoints.logout,
+          data: {'refresh': 'refresh-test-value'},
+        ),
+      ).thenThrow(const AppException.network('private network detail'));
+
+      await repository.logout();
+
+      expect(tokenStorage.clearCount, 1);
+      expect(tokenStorage.accessToken, isNull);
+      expect(tokenStorage.refreshToken, isNull);
+    },
+  );
+
+  test('logout all returns the revoked session count', () async {
+    when(
+      () => apiClient.postMap(ApiEndpoints.logoutAll, data: const {}),
+    ).thenAnswer((_) async => {'revoked_sessions': 3});
+
+    final revokedSessions = await repository.logoutAll();
+
+    expect(revokedSessions, 3);
   });
 }

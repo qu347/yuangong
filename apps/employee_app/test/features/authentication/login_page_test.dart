@@ -50,6 +50,9 @@ class LoginAuthRepository implements AuthRepository {
   Future<void> logout() async {}
 
   @override
+  Future<int> logoutAll() async => 0;
+
+  @override
   Future<CurrentUser?> restoreSession() async => null;
 
   Future<void> close() => _authenticationLost.close();

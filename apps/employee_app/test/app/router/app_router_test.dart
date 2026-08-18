@@ -29,12 +29,15 @@ class RouterAuthRepository implements AuthRepository {
   Future<void> logout() async {}
 
   @override
+  Future<int> logoutAll() async => 0;
+
+  @override
   Future<CurrentUser?> restoreSession() async => null;
 
   Future<void> close() => _authenticationLost.close();
 }
 
-class RouterEmployeeRepository implements EmployeeRepository {
+class RouterEmployeeRepository extends EmployeeRepository {
   @override
   Future<Employee> fetchEmployee(String id) => throw UnimplementedError();
 
@@ -50,7 +53,7 @@ class RouterEmployeeRepository implements EmployeeRepository {
       const EmployeePage(count: 0, next: null, previous: null, results: []);
 }
 
-class RouterDepartmentRepository implements DepartmentRepository {
+class RouterDepartmentRepository extends DepartmentRepository {
   @override
   Future<List<Department>> fetchDepartments() async => const [];
 }
@@ -157,5 +160,61 @@ void main() {
 
     expect(find.text('登录员工目录'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('redirects a management deep link when capability is absent', (
+    tester,
+  ) async {
+    final store = AuthSessionStore()..markAuthenticated();
+    final repository = RouterAuthRepository();
+    addTearDown(repository.close);
+
+    await tester.pumpWidget(
+      routerApp(
+        store: store,
+        repository: repository,
+        initialLocation: '/audit',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('员工目录'), findsOneWidget);
+    expect(find.text('审计日志'), findsNothing);
+  });
+
+  testWidgets('allows an audit deep link when capability is granted', (
+    tester,
+  ) async {
+    const user = CurrentUser(
+      id: '00000000-0000-0000-0000-000000000101',
+      username: 'hr_admin',
+      displayName: '人事管理员',
+      employeeId: null,
+      employeeNo: null,
+      department: null,
+      roles: ['hr_admin'],
+      capabilities: UserCapabilities(
+        canManageEmployees: true,
+        canManageDepartments: true,
+        canManagePositions: true,
+        canViewAudit: true,
+        canLogoutAll: true,
+      ),
+    );
+    final store = AuthSessionStore()..markAuthenticated(user);
+    final repository = RouterAuthRepository();
+    addTearDown(repository.close);
+
+    await tester.pumpWidget(
+      routerApp(
+        store: store,
+        repository: repository,
+        initialLocation: '/audit',
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.text('审计日志'), findsOneWidget);
   });
 }

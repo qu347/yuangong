@@ -9,6 +9,7 @@ urlpatterns = [
     path("api/v1/", include("modules.accounts.urls")),
     path("api/v1/", include("modules.organizations.urls")),
     path("api/v1/", include("modules.employees.urls")),
+    path("api/v1/", include("modules.audit.urls")),
 ]
 
 if settings.API_DOCS_ENABLED:

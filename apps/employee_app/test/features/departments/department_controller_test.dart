@@ -5,7 +5,7 @@ import 'package:employee_app/features/departments/presentation/department_contro
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class FakeDepartmentRepository implements DepartmentRepository {
+class FakeDepartmentRepository extends DepartmentRepository {
   final responses = <Object>[];
   int requestCount = 0;
 

@@ -3,6 +3,7 @@ enum FailureType {
   authentication,
   permission,
   validation,
+  conflict,
   service,
   data,
   unexpected,
@@ -28,6 +29,9 @@ class Failure implements Exception {
 
   const Failure.validation([this.message = '请求参数不正确。'])
     : type = FailureType.validation;
+
+  const Failure.conflict([this.message = '数据状态已发生变化，请重新加载后再试。'])
+    : type = FailureType.conflict;
 
   const Failure.data() : type = FailureType.data, message = '后端返回了无法识别的数据。';
 

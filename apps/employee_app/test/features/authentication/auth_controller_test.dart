@@ -49,6 +49,9 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<int> logoutAll() async => 0;
+
+  @override
   Future<CurrentUser?> restoreSession() async => restoredUser;
 
   Future<void> close() => authLossController.close();

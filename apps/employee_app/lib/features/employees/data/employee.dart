@@ -29,6 +29,7 @@ class Employee {
     required this.position,
     required this.employmentStatus,
     required this.hireDate,
+    this.updatedAt,
   });
 
   final String id;
@@ -40,6 +41,7 @@ class Employee {
   final DirectoryReference? position;
   final String employmentStatus;
   final DateTime? hireDate;
+  final DateTime? updatedAt;
 
   bool get isActive => employmentStatus == 'active';
 
@@ -47,6 +49,7 @@ class Employee {
     final departmentJson = json['department'];
     final positionJson = json['position'];
     final hireDateJson = json['hire_date'];
+    final updatedAtJson = json['updated_at'];
     if (departmentJson is! Map<String, dynamic>) {
       throw const FormatException('invalid employee department');
     }
@@ -63,6 +66,16 @@ class Employee {
         throw const FormatException('invalid employee hire date');
       }
     }
+    DateTime? updatedAt;
+    if (updatedAtJson != null) {
+      if (updatedAtJson is! String) {
+        throw const FormatException('invalid employee updated at');
+      }
+      updatedAt = DateTime.tryParse(updatedAtJson);
+      if (updatedAt == null) {
+        throw const FormatException('invalid employee updated at');
+      }
+    }
     return Employee(
       id: _requiredString(json, 'id'),
       employeeNo: _requiredString(json, 'employee_no'),
@@ -75,6 +88,37 @@ class Employee {
           : DirectoryReference.fromJson(positionJson as Map<String, dynamic>),
       employmentStatus: _requiredString(json, 'employment_status'),
       hireDate: hireDate,
+      updatedAt: updatedAt,
+    );
+  }
+}
+
+class EmployeeActionResult {
+  const EmployeeActionResult({
+    required this.employee,
+    required this.changed,
+    required this.accountRequiresActivation,
+  });
+
+  final Employee employee;
+  final bool changed;
+  final bool accountRequiresActivation;
+
+  factory EmployeeActionResult.fromJson(Map<String, dynamic> json) {
+    final employeeJson = json['employee'];
+    final changed = json['changed'];
+    final accountRequiresActivation = json['account_requires_activation'];
+    if (employeeJson is! Map<String, dynamic> || changed is! bool) {
+      throw const FormatException('invalid employee action result');
+    }
+    if (accountRequiresActivation != null &&
+        accountRequiresActivation is! bool) {
+      throw const FormatException('invalid account activation requirement');
+    }
+    return EmployeeActionResult(
+      employee: Employee.fromJson(employeeJson),
+      changed: changed,
+      accountRequiresActivation: accountRequiresActivation == true,
     );
   }
 }

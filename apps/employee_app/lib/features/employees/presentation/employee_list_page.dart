@@ -6,6 +6,7 @@ import '../../../core/errors/failure.dart';
 import '../../../core/responsive/app_breakpoints.dart';
 import '../../../core/widgets/app_error_view.dart';
 import '../../../core/widgets/app_loading_view.dart';
+import '../../authentication/presentation/auth_session_store.dart';
 import '../../departments/presentation/department_controller.dart';
 import '../data/employee.dart';
 import '../data/employee_page.dart';
@@ -20,6 +21,7 @@ class EmployeeListPage extends ConsumerWidget {
     final controller = ref.read(employeeDirectoryControllerProvider.notifier);
     final departments =
         ref.watch(departmentControllerProvider).value ?? const [];
+    final capabilities = ref.watch(authSessionStoreProvider).capabilities;
 
     return SafeArea(
       child: Padding(
@@ -45,6 +47,24 @@ class EmployeeListPage extends ConsumerWidget {
                     ],
                   ),
                 ),
+                if (capabilities.canViewAudit) ...[
+                  IconButton.filledTonal(
+                    key: const Key('employee_audit_entry'),
+                    tooltip: '查看审计日志',
+                    onPressed: () => context.go('/audit'),
+                    icon: const Icon(Icons.policy_outlined),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                if (capabilities.canManageEmployees) ...[
+                  FilledButton.icon(
+                    key: const Key('employee_create_entry'),
+                    onPressed: () => context.push('/employees/new'),
+                    icon: const Icon(Icons.person_add_alt_1_rounded),
+                    label: const Text('新增员工'),
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 IconButton.filledTonal(
                   tooltip: '刷新员工目录',
                   onPressed: controller.refresh,

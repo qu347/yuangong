@@ -29,7 +29,7 @@ class AuthController extends AsyncNotifier<CurrentUser?> {
       if (user == null) {
         _sessionStore.markUnauthenticated();
       } else {
-        _sessionStore.markAuthenticated();
+        _sessionStore.markAuthenticated(user);
       }
       return user;
     } on Object {
@@ -49,7 +49,7 @@ class AuthController extends AsyncNotifier<CurrentUser?> {
         password: password,
       );
       state = AsyncData(user);
-      _sessionStore.markAuthenticated();
+      _sessionStore.markAuthenticated(user);
       return true;
     } on Object catch (error, stackTrace) {
       state = AsyncError(error, stackTrace);
@@ -62,6 +62,12 @@ class AuthController extends AsyncNotifier<CurrentUser?> {
     await _repository.logout();
     state = const AsyncData(null);
     _sessionStore.markUnauthenticated();
+  }
+
+  Future<int> logoutAll() async {
+    final revokedSessions = await _repository.logoutAll();
+    await logout();
+    return revokedSessions;
   }
 
   Future<void> _handleAuthenticationLost() => logout();

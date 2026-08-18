@@ -11,7 +11,7 @@ final employeeRepositoryProvider = Provider<EmployeeRepository>(
   (ref) => NetworkEmployeeRepository(ref.watch(apiClientProvider)),
 );
 
-abstract interface class EmployeeRepository {
+abstract class EmployeeRepository {
   Future<EmployeePage> fetchEmployees({
     String search = '',
     String? departmentId,
@@ -22,6 +22,14 @@ abstract interface class EmployeeRepository {
   });
 
   Future<Employee> fetchEmployee(String id);
+  Future<Employee> createEmployee(Map<String, dynamic> data) =>
+      throw UnimplementedError();
+  Future<Employee> updateEmployee(String id, Map<String, dynamic> data) =>
+      throw UnimplementedError();
+  Future<EmployeeActionResult> departEmployee(String id) =>
+      throw UnimplementedError();
+  Future<EmployeeActionResult> reactivateEmployee(String id) =>
+      throw UnimplementedError();
 }
 
 class NetworkEmployeeRepository implements EmployeeRepository {
@@ -71,12 +79,58 @@ class NetworkEmployeeRepository implements EmployeeRepository {
     }
   }
 
+  @override
+  Future<Employee> createEmployee(Map<String, dynamic> data) => _writeEmployee(
+    () => _apiClient.postMap(ApiEndpoints.employees, data: data),
+  );
+
+  @override
+  Future<Employee> updateEmployee(String id, Map<String, dynamic> data) =>
+      _writeEmployee(
+        () => _apiClient.patchMap('${ApiEndpoints.employees}$id/', data: data),
+      );
+
+  @override
+  Future<EmployeeActionResult> departEmployee(String id) =>
+      _employeeAction('${ApiEndpoints.employees}$id/depart/');
+
+  @override
+  Future<EmployeeActionResult> reactivateEmployee(String id) =>
+      _employeeAction('${ApiEndpoints.employees}$id/reactivate/');
+
+  Future<Employee> _writeEmployee(
+    Future<Map<String, dynamic>> Function() request,
+  ) async {
+    try {
+      return Employee.fromJson(await request());
+    } on AppException catch (error) {
+      throw _failureFor(error);
+    } on FormatException {
+      throw const Failure.data();
+    }
+  }
+
+  Future<EmployeeActionResult> _employeeAction(String path) async {
+    try {
+      return EmployeeActionResult.fromJson(
+        await _apiClient.postMap(path, data: const {}),
+      );
+    } on AppException catch (error) {
+      throw _failureFor(error);
+    } on FormatException {
+      throw const Failure.data();
+    }
+  }
+
   Failure _failureFor(AppException error) {
     return switch (error.type) {
       AppExceptionType.network => const Failure.network(),
       AppExceptionType.unauthorized => const Failure.authentication(),
       AppExceptionType.forbidden => const Failure.permission(),
       AppExceptionType.validation => const Failure.validation(),
+      AppExceptionType.conflict when error.message == 'stale_object' =>
+        const Failure.conflict('员工信息已被其他操作更新，请重新加载后再试。'),
+      AppExceptionType.conflict => const Failure.conflict(),
       AppExceptionType.protocol => const Failure.service(),
       AppExceptionType.unexpected => const Failure(
         type: FailureType.unexpected,
