@@ -10,6 +10,7 @@ env = environ.Env()
 environ.Env.read_env(PROJECT_ROOT / ".env", overwrite=False)
 
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="development-only-change-me")
+JWT_SIGNING_KEY = env("JWT_SIGNING_KEY", default="development-only-jwt-signing-key-change-me")
 DEBUG = False
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 
@@ -103,6 +104,13 @@ AUDIT_ARCHIVE_HMAC_KEYS = env.json(
     "AUDIT_ARCHIVE_HMAC_KEYS_JSON",
     default={"audit-archive-development-v1": "development-only-audit-archive-key-change-me"},
 )
+ACCOUNT_TOKEN_HMAC_ACTIVE_KID = env(
+    "ACCOUNT_TOKEN_HMAC_ACTIVE_KID", default="account-token-development-v1"
+)
+ACCOUNT_TOKEN_HMAC_KEYS = env.json(
+    "ACCOUNT_TOKEN_HMAC_KEYS_JSON",
+    default={"account-token-development-v1": "development-only-account-token-key-change-me"},
+)
 AUDIT_RETENTION_DAYS = env.int("AUDIT_RETENTION_DAYS", default=0)
 AUDIT_ARCHIVE_HMAC_ACTIVE_KID = env(
     "AUDIT_ARCHIVE_HMAC_ACTIVE_KID", default="audit-archive-development-v1"
@@ -152,6 +160,7 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "TOKEN_REFRESH_SERIALIZER": "modules.accounts.serializers.ActiveUserTokenRefreshSerializer",
+    "SIGNING_KEY": JWT_SIGNING_KEY,
 }
 
 SPECTACULAR_SETTINGS = {

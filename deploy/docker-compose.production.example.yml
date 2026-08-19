@@ -1,0 +1,85 @@
+name: employee-management-production-example
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?required}
+      POSTGRES_USER: ${POSTGRES_USER:?required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/backend/Dockerfile.production
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?required}
+      JWT_SIGNING_KEY: ${JWT_SIGNING_KEY:?required}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:?required}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?required}
+      API_PUBLIC_BASE_URL: ${API_PUBLIC_BASE_URL:?required}
+      POSTGRES_DB: ${POSTGRES_DB:?required}
+      POSTGRES_USER: ${POSTGRES_USER:?required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      REDIS_URL: redis://redis:6379/0
+      EMAIL_HOST: ${EMAIL_HOST:?required}
+      EMAIL_PORT: ${EMAIL_PORT:?required}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:?required}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:?required}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:?required}
+      EMAIL_USE_SSL: ${EMAIL_USE_SSL:?required}
+      EMAIL_TIMEOUT: ${EMAIL_TIMEOUT:?required}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:?required}
+      SERVER_EMAIL: ${SERVER_EMAIL:?required}
+      ACCOUNT_TOKEN_HMAC_ACTIVE_KID: ${ACCOUNT_TOKEN_HMAC_ACTIVE_KID:?required}
+      ACCOUNT_TOKEN_HMAC_KEYS_JSON: ${ACCOUNT_TOKEN_HMAC_KEYS_JSON:?required}
+      AUDIT_ARCHIVE_HMAC_ACTIVE_KID: ${AUDIT_ARCHIVE_HMAC_ACTIVE_KID:?required}
+      AUDIT_ARCHIVE_HMAC_KEYS_JSON: ${AUDIT_ARCHIVE_HMAC_KEYS_JSON:?required}
+      AUDIT_ARCHIVE_DIR: ${AUDIT_ARCHIVE_DIR:?required}
+      AUDIT_RETENTION_DAYS: ${AUDIT_RETENTION_DAYS:-0}
+      AUDIT_EXPORT_MAX_ROWS: ${AUDIT_EXPORT_MAX_ROWS:-10000}
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/', timeout=5)",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -51,6 +51,7 @@ class AccountInvitation(models.Model):
     username = models.CharField(max_length=150)
     target_role = models.CharField(max_length=32, choices=TargetRole.choices)
     token_digest = models.CharField(max_length=64, unique=True)
+    token_key_id = models.CharField(max_length=64, null=True, blank=True)  # noqa: DJ001
     expires_at = models.DateTimeField()
     accepted_at = models.DateTimeField(null=True, blank=True)
     revoked_at = models.DateTimeField(null=True, blank=True)
@@ -103,6 +104,7 @@ class PasswordResetChallenge(models.Model):
         related_name="password_reset_challenges",
     )
     token_digest = models.CharField(max_length=64, unique=True)
+    token_key_id = models.CharField(max_length=64, null=True, blank=True)  # noqa: DJ001
     expires_at = models.DateTimeField()
     used_at = models.DateTimeField(null=True, blank=True)
     revoked_at = models.DateTimeField(null=True, blank=True)
