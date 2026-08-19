@@ -7,6 +7,7 @@ WORKFLOW = REPOSITORY_ROOT / ".github" / "workflows" / "ci.yml"
 CHECK_SCRIPT = REPOSITORY_ROOT / "scripts" / "check.ps1"
 COMPOSE_FILE = REPOSITORY_ROOT / "deploy" / "docker-compose.dev.yml"
 DEV_ENTRYPOINT = REPOSITORY_ROOT / "deploy" / "backend" / "entrypoint.sh"
+REPOSITORY_SAFETY_SCRIPT = REPOSITORY_ROOT / "scripts" / "repository-safety.ps1"
 
 
 def load_workflow():
@@ -106,3 +107,9 @@ def test_development_entrypoint_honors_one_off_commands():
 
     assert 'if [ "$#" -gt 0 ]; then' in text
     assert 'exec "$@"' in text
+
+
+def test_repository_safety_normalizes_the_success_exit_code():
+    text = REPOSITORY_SAFETY_SCRIPT.read_text(encoding="utf-8")
+
+    assert text.rstrip().endswith("exit 0")
