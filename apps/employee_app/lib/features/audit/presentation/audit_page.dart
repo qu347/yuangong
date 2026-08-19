@@ -4,20 +4,35 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/errors/failure.dart';
 import '../../../core/widgets/app_error_view.dart';
 import '../../../core/widgets/app_loading_view.dart';
+import '../../authentication/presentation/auth_session_store.dart';
 import '../data/audit_event.dart';
+import '../data/audit_export_repository.dart';
 import '../data/audit_repository.dart';
+import 'audit_export_controller.dart';
 
 final auditPageProvider = FutureProvider.autoDispose<AuditEventPage>(
   (ref) => ref.watch(auditRepositoryProvider).fetchAuditEvents(),
   retry: (retryCount, error) => null,
 );
 
-class AuditPage extends ConsumerWidget {
+class AuditPage extends ConsumerStatefulWidget {
   const AuditPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AuditPage> createState() => _AuditPageState();
+}
+
+class _AuditPageState extends ConsumerState<AuditPage> {
+  static const filters = AuditExportFilters();
+  bool exporting = false;
+
+  @override
+  Widget build(BuildContext context) {
     final events = ref.watch(auditPageProvider);
+    final canExport = ref
+        .watch(authSessionStoreProvider)
+        .capabilities
+        .canExportAudit;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
@@ -39,6 +54,14 @@ class AuditPage extends ConsumerWidget {
                     ],
                   ),
                 ),
+                if (canExport)
+                  FilledButton.tonalIcon(
+                    key: const Key('audit_export'),
+                    onPressed: exporting ? null : _confirmAndExport,
+                    icon: const Icon(Icons.download_outlined),
+                    label: Text(exporting ? '正在导出' : '导出 CSV'),
+                  ),
+                const SizedBox(width: 8),
                 IconButton.filledTonal(
                   key: const Key('audit_refresh'),
                   tooltip: '刷新审计日志',
@@ -69,6 +92,46 @@ class AuditPage extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmAndExport() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('确认导出审计？'),
+        content: Text('筛选范围：${filters.summary}\n最多导出服务器允许的记录数量。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('确认导出'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || exporting) return;
+    setState(() => exporting = true);
+    try {
+      final result = await ref
+          .read(auditExportControllerProvider)
+          .export(filters);
+      if (!mounted) return;
+      final message = result.cancelled ? '已取消保存。' : '审计文件已保存：${result.path}';
+      _showMessage(message);
+    } on Failure catch (error) {
+      if (mounted) _showMessage(error.message);
+    } finally {
+      if (mounted) setState(() => exporting = false);
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 }
 

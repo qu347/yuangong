@@ -84,6 +84,7 @@ class UserCapabilities {
     this.canViewSessions = false,
     this.canRevokeOtherSessions = false,
     this.canChangePassword = false,
+    this.canExportAudit = false,
   });
 
   const UserCapabilities.none()
@@ -97,7 +98,8 @@ class UserCapabilities {
       canManageAccountRoles = false,
       canViewSessions = false,
       canRevokeOtherSessions = false,
-      canChangePassword = false;
+      canChangePassword = false,
+      canExportAudit = false;
 
   final bool canManageEmployees;
   final bool canManageDepartments;
@@ -110,6 +112,7 @@ class UserCapabilities {
   final bool canViewSessions;
   final bool canRevokeOtherSessions;
   final bool canChangePassword;
+  final bool canExportAudit;
 
   bool get canManageDirectory =>
       canManageEmployees || canManageDepartments || canManagePositions;
@@ -138,6 +141,7 @@ class UserCapabilities {
       canViewSessions: readCapability('can_view_sessions'),
       canRevokeOtherSessions: readCapability('can_revoke_other_sessions'),
       canChangePassword: readCapability('can_change_password'),
+      canExportAudit: readCapability('can_export_audit'),
     );
   }
 }
