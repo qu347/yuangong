@@ -95,6 +95,22 @@ ACCOUNT_INVITATION_TTL = timedelta(hours=48)
 PASSWORD_RESET_TTL = timedelta(minutes=30)
 PASSWORD_RESET_REQUEST_LIMIT = 5
 AUDIT_EXPORT_MAX_ROWS = env.int("AUDIT_EXPORT_MAX_ROWS", default=10000)
+AUDIT_RETENTION_DAYS = env.int("AUDIT_RETENTION_DAYS", default=0)
+AUDIT_ARCHIVE_HMAC_ACTIVE_KID = env(
+    "AUDIT_ARCHIVE_HMAC_ACTIVE_KID", default="audit-archive-development-v1"
+)
+AUDIT_ARCHIVE_HMAC_KEYS = env.json(
+    "AUDIT_ARCHIVE_HMAC_KEYS_JSON",
+    default={"audit-archive-development-v1": "development-only-audit-archive-key-change-me"},
+)
+AUDIT_RETENTION_DAYS = env.int("AUDIT_RETENTION_DAYS", default=0)
+AUDIT_ARCHIVE_HMAC_ACTIVE_KID = env(
+    "AUDIT_ARCHIVE_HMAC_ACTIVE_KID", default="audit-archive-development-v1"
+)
+AUDIT_ARCHIVE_HMAC_KEYS = env.json(
+    "AUDIT_ARCHIVE_HMAC_KEYS_JSON",
+    default={"audit-archive-development-v1": "development-only-audit-archive-key-change-me"},
+)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

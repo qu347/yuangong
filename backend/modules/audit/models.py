@@ -84,3 +84,34 @@ class AuditEvent(models.Model):
     def delete(self, *args, **kwargs):
         del args, kwargs
         raise ValidationError("审计事件不可删除。")
+
+
+class AuditArchiveBatch(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "待处理"
+        COMPLETED = "completed", "已完成"
+        FAILED = "failed", "失败"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
+    cutoff_at = models.DateTimeField()
+    first_event_at = models.DateTimeField(null=True, blank=True)
+    last_event_at = models.DateTimeField(null=True, blank=True)
+    event_count = models.PositiveIntegerField(default=0)
+    archive_filename = models.CharField(max_length=255, blank=True)
+    manifest_filename = models.CharField(max_length=255, blank=True)
+    sha256 = models.CharField(max_length=64, blank=True)
+    hmac_sha256 = models.CharField(max_length=64, blank=True)
+    hmac_key_id = models.CharField(max_length=64, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    failure_code = models.CharField(max_length=32, blank=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        indexes = [models.Index(fields=["status", "cutoff_at"], name="audit_arch_status_cut_idx")]
+        verbose_name = "审计归档批次"
+        verbose_name_plural = "审计归档批次"
+
+    def __str__(self):
+        return f"{self.status}:{self.id}"
