@@ -78,6 +78,12 @@ class UserCapabilities {
     required this.canManagePositions,
     required this.canViewAudit,
     required this.canLogoutAll,
+    this.canManageAccounts = false,
+    this.canInviteAccounts = false,
+    this.canManageAccountRoles = false,
+    this.canViewSessions = false,
+    this.canRevokeOtherSessions = false,
+    this.canChangePassword = false,
   });
 
   const UserCapabilities.none()
@@ -85,13 +91,25 @@ class UserCapabilities {
       canManageDepartments = false,
       canManagePositions = false,
       canViewAudit = false,
-      canLogoutAll = false;
+      canLogoutAll = false,
+      canManageAccounts = false,
+      canInviteAccounts = false,
+      canManageAccountRoles = false,
+      canViewSessions = false,
+      canRevokeOtherSessions = false,
+      canChangePassword = false;
 
   final bool canManageEmployees;
   final bool canManageDepartments;
   final bool canManagePositions;
   final bool canViewAudit;
   final bool canLogoutAll;
+  final bool canManageAccounts;
+  final bool canInviteAccounts;
+  final bool canManageAccountRoles;
+  final bool canViewSessions;
+  final bool canRevokeOtherSessions;
+  final bool canChangePassword;
 
   bool get canManageDirectory =>
       canManageEmployees || canManageDepartments || canManagePositions;
@@ -114,6 +132,12 @@ class UserCapabilities {
       canManagePositions: readCapability('can_manage_positions'),
       canViewAudit: readCapability('can_view_audit'),
       canLogoutAll: readCapability('can_logout_all'),
+      canManageAccounts: readCapability('can_manage_accounts'),
+      canInviteAccounts: readCapability('can_invite_accounts'),
+      canManageAccountRoles: readCapability('can_manage_account_roles'),
+      canViewSessions: readCapability('can_view_sessions'),
+      canRevokeOtherSessions: readCapability('can_revoke_other_sessions'),
+      canChangePassword: readCapability('can_change_password'),
     );
   }
 }

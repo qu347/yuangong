@@ -21,6 +21,14 @@ MANAGEMENT_PERMISSION_KEYS = EMPLOYEE_PERMISSION_KEYS | {
     ("organizations", "change_position"),
 }
 
+SYSTEM_ADMIN_PERMISSION_KEYS = MANAGEMENT_PERMISSION_KEYS | {
+    ("accounts", "view_user"),
+    ("accounts", "change_user"),
+    ("accounts", "add_accountinvitation"),
+    ("accounts", "view_accountinvitation"),
+    ("accounts", "change_accountinvitation"),
+}
+
 
 def _permissions_for(keys):
     permissions = []
@@ -39,7 +47,7 @@ def sync_rbac_permissions():
     role_permissions = {
         ROLE_EMPLOYEE: EMPLOYEE_PERMISSION_KEYS,
         ROLE_HR_ADMIN: MANAGEMENT_PERMISSION_KEYS,
-        ROLE_SYSTEM_ADMIN: MANAGEMENT_PERMISSION_KEYS,
+        ROLE_SYSTEM_ADMIN: SYSTEM_ADMIN_PERMISSION_KEYS,
     }
     groups = {}
     for role, permission_keys in role_permissions.items():

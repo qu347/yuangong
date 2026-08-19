@@ -1,6 +1,6 @@
 # 企业员工管理系统
 
-面向企业内部员工的 Windows 与 Android 管理客户端。本仓库已实现第一期“身份认证与员工目录”最小纵向切片，不包含完整人力资源管理业务。
+面向企业内部员工的 Windows 与 Android 管理客户端。当前已完成员工目录、HR 维护、RBAC/审计，以及账号邀请、密码恢复、账号生命周期和多设备会话安全闭环；仍不包含考勤、审批、薪资等完整人力资源业务。
 
 ## 平台范围
 
@@ -15,18 +15,21 @@
 
 - 客户端：Flutter stable、Dart、Material 3、Riverpod、go_router、Dio、flutter_secure_storage
 - 后端：Python 3.12、Django 5.2.x、Django REST Framework、SimpleJWT、drf-spectacular、pytest、Ruff
-- 基础设施：PostgreSQL 17、Redis 8（预留）、Docker Compose
+- 基础设施：PostgreSQL 17、Redis 8、Mailpit、Docker Compose
 - 协作：GitHub Actions、Pull Request 模板、ADR
 
-## 第一期功能
+## 已实现能力
 
-- JWT 登录、刷新、当前用户和退出登录。
-- 只读部门、岗位和员工目录。
+- 用户名或账号邮箱登录、JWT rotation、`sid` 会话绑定和 Access/Refresh 即时吊销。
+- system_admin 账号邀请、重发/撤销、初始密码、停用/恢复和 employee/hr_admin 角色调整。
+- 忘记密码通用响应、一次性重置码、登录用户修改密码和多设备会话管理。
+- 部门、岗位和员工目录读写，以及员工离职/恢复。
 - 员工姓名/工号/工作邮箱搜索，部门和在职状态筛选，受限分页与排序。
 - Windows 宽屏表格、Android 紧凑卡片、员工详情和部门层级。
-- Django Admin 管理入口和幂等虚构演示数据命令。
+- Django model-permission RBAC、append-only 审计、Django Admin 和幂等虚构演示数据命令。
+- PostgreSQL/Redis/Mailpit 本地 Compose 与六 job GitHub Actions 基础 CI。
 
-本期不包含员工写入页面、考勤、审批、薪资、招聘、上传、多租户或第三方身份源。
+当前不包含考勤、审批、薪资、招聘、上传、多租户、MFA、外部 SSO 或生产邮件供应商。
 
 ## 目录结构
 
@@ -87,11 +90,17 @@ powershell -ExecutionPolicy Bypass -File .\scripts\run-backend.ps1
 - `POST http://127.0.0.1:8000/api/v1/auth/login/`
 - `POST http://127.0.0.1:8000/api/v1/auth/refresh/`
 - `GET http://127.0.0.1:8000/api/v1/me/`
+- `POST http://127.0.0.1:8000/api/v1/auth/password-reset/request/`
+- `GET http://127.0.0.1:8000/api/v1/auth/sessions/`
+- `GET http://127.0.0.1:8000/api/v1/accounts/`
+- `GET http://127.0.0.1:8000/api/v1/accounts/invitations/`
 - `GET http://127.0.0.1:8000/api/v1/departments/`
 - `GET http://127.0.0.1:8000/api/v1/positions/`
 - `GET http://127.0.0.1:8000/api/v1/employees/`
 - `GET http://127.0.0.1:8000/api/schema/`
 - `GET http://127.0.0.1:8000/api/docs/`
+
+开发 Compose 的 Mailpit UI 只绑定 `http://127.0.0.1:8025`。它仅用于捕获 `.invalid` 本地测试邮件；普通 API 不返回邀请码或重置码，production settings 也不会默认使用 Mailpit。
 
 ## 初始化虚构演示数据
 
@@ -193,6 +202,6 @@ flutter build apk --debug --dart-define-from-file=../../config/dev.android-emula
 
 ## 下一步
 
-第二阶段已经具备 HR 员工/部门/岗位维护、Django model-permission RBAC、append-only 操作审计、员工离职/复职和 Refresh Token 服务端吊销。设计与验收证据见 [ADR-0004](docs/decisions/ADR-0004-hr-directory-management-security.md) 和 [第二阶段验收报告](docs/hr-directory-management-validation-report.md)。
+第三阶段已经具备账号邀请/恢复、密码安全、多设备会话、`sid` 即时吊销和基础 CI。设计与验收证据见 [ADR-0005](docs/decisions/ADR-0005-account-lifecycle-session-security.md) 和 [第三阶段验收报告](docs/account-lifecycle-security-validation-report.md)。
 
-下一阶段先处理正式 applicationId/Windows 标识、账号邀请/密码重置、账号恢复流程与审计保留/导出策略。不要直接跳到考勤、审批或薪资。
+下一阶段只考虑审计导出/保留/归档、正式 applicationId/Windows publisher、生产邮件供应商、branch protection 与发布准备。不要直接跳到考勤、审批或薪资。

@@ -40,7 +40,7 @@ def test_login_returns_access_and_refresh_tokens(client, active_user, login_pass
     response = _login(client, active_user, login_password)
 
     assert response.status_code == 200
-    assert set(response.json()) == {"access", "refresh"}
+    assert set(response.json()) == {"access", "refresh", "session"}
     assert all(isinstance(response.json()[name], str) for name in ("access", "refresh"))
 
 
@@ -105,6 +105,12 @@ def test_me_returns_clear_null_directory_fields_for_unlinked_user(
             "can_manage_positions": False,
             "can_view_audit": False,
             "can_logout_all": True,
+            "can_manage_accounts": False,
+            "can_invite_accounts": False,
+            "can_manage_account_roles": False,
+            "can_view_sessions": True,
+            "can_revoke_other_sessions": True,
+            "can_change_password": True,
         },
     }
 
@@ -140,4 +146,10 @@ def test_me_returns_linked_employee_and_role_summary(client, active_user, login_
         "can_manage_positions": False,
         "can_view_audit": False,
         "can_logout_all": True,
+        "can_manage_accounts": False,
+        "can_invite_accounts": False,
+        "can_manage_account_roles": False,
+        "can_view_sessions": True,
+        "can_revoke_other_sessions": True,
+        "can_change_password": True,
     }

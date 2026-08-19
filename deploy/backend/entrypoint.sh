@@ -26,4 +26,9 @@ while True:
 PY
 
 python manage.py migrate --noinput
+
+if [ "$#" -gt 0 ]; then
+    exec "$@"
+fi
+
 exec python manage.py runserver 0.0.0.0:8000

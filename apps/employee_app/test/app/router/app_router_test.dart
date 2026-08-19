@@ -79,6 +79,26 @@ Widget routerApp({
 }
 
 void main() {
+  testWidgets('keeps public recovery routes available without authentication', (
+    tester,
+  ) async {
+    final store = AuthSessionStore()..markUnauthenticated();
+    final repository = RouterAuthRepository();
+    addTearDown(repository.close);
+
+    await tester.pumpWidget(
+      routerApp(
+        store: store,
+        repository: repository,
+        initialLocation: '/forgot-password',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('忘记密码'), findsOneWidget);
+    expect(find.text('登录员工目录'), findsNothing);
+  });
+
   testWidgets('redirects an unauthenticated business route to login', (
     tester,
   ) async {
@@ -216,5 +236,25 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('审计日志'), findsOneWidget);
+  });
+
+  testWidgets('redirects account admin deep link without account capability', (
+    tester,
+  ) async {
+    final store = AuthSessionStore()..markAuthenticated();
+    final repository = RouterAuthRepository();
+    addTearDown(repository.close);
+
+    await tester.pumpWidget(
+      routerApp(
+        store: store,
+        repository: repository,
+        initialLocation: '/admin/accounts',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('员工目录'), findsOneWidget);
+    expect(find.text('账号管理'), findsNothing);
   });
 }

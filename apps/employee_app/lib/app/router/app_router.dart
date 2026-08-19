@@ -4,6 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/account_security/presentation/accept_invitation_page.dart';
+import '../../features/account_security/presentation/forgot_password_page.dart';
+import '../../features/account_security/presentation/reset_password_page.dart';
+import '../../features/account_security/presentation/security_settings_page.dart';
+import '../../features/account_security/presentation/session_list_page.dart';
+import '../../features/accounts/presentation/account_detail_page.dart';
+import '../../features/accounts/presentation/account_list_page.dart';
+import '../../features/accounts/presentation/invitation_form_page.dart';
 import '../../features/audit/presentation/audit_page.dart';
 import '../../features/authentication/presentation/auth_controller.dart';
 import '../../features/authentication/presentation/auth_session_store.dart';
@@ -42,8 +50,13 @@ GoRouter createAppRouter(
     refreshListenable: sessionStore,
     redirect: (context, state) {
       final onLogin = state.matchedLocation == '/login';
+      final publicRecovery = {
+        '/forgot-password',
+        '/reset-password',
+        '/accept-invitation',
+      }.contains(state.matchedLocation);
       if (sessionStore.status != AuthSessionStatus.authenticated) {
-        return onLogin ? null : '/login';
+        return onLogin || publicRecovery ? null : '/login';
       }
       final location = state.matchedLocation;
       final capabilities = sessionStore.capabilities;
@@ -61,10 +74,30 @@ GoRouter createAppRouter(
       if (location == '/audit' && !capabilities.canViewAudit) {
         return '/employees';
       }
+      if ((location == '/settings/sessions' && !capabilities.canViewSessions) ||
+          (location == '/settings/security' &&
+              !capabilities.canChangePassword)) {
+        return '/employees';
+      }
+      if (location.startsWith('/admin/') && !capabilities.canManageAccounts) {
+        return '/employees';
+      }
       return onLogin ? '/employees' : null;
     },
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) => const ResetPasswordPage(),
+      ),
+      GoRoute(
+        path: '/accept-invitation',
+        builder: (context, state) => const AcceptInvitationPage(),
+      ),
       ShellRoute(
         builder: (context, state, child) {
           return AdaptiveShell(
@@ -117,6 +150,27 @@ GoRouter createAppRouter(
           GoRoute(
             path: '/audit',
             builder: (context, state) => const AuditPage(),
+          ),
+          GoRoute(
+            path: '/settings/security',
+            builder: (context, state) => const SecuritySettingsPage(),
+          ),
+          GoRoute(
+            path: '/settings/sessions',
+            builder: (context, state) => const SessionListPage(),
+          ),
+          GoRoute(
+            path: '/admin/accounts',
+            builder: (context, state) => const AccountListPage(),
+          ),
+          GoRoute(
+            path: '/admin/accounts/:id',
+            builder: (context, state) =>
+                AccountDetailPage(accountId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/admin/invitations/new',
+            builder: (context, state) => const InvitationFormPage(),
           ),
         ],
       ),

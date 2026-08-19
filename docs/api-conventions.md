@@ -10,11 +10,16 @@
 
 ## 认证与目录端点
 
-- `POST /api/v1/auth/login/` 与 `POST /api/v1/auth/refresh/` 公开。
+- `POST /api/v1/auth/login/` 接受唯一的 `identifier`（用户名或账号邮箱）和密码；过渡期旧 `username` 可单独使用，两者不得并存。
+- `POST /api/v1/auth/login/`、`POST /api/v1/auth/refresh/`、邀请接受和密码恢复公开。
 - Refresh Token 成功刷新后 rotation，旧 Refresh Token 立即进入 blacklist。
 - `POST /api/v1/auth/logout/` 需要 Access Token 和当前用户的 Refresh Token，成功返回 204。
 - `POST /api/v1/auth/logout-all/` 吊销当前用户全部已登记 Refresh Token，返回 `revoked_sessions`。
 - `GET /api/v1/me/`、部门、岗位和员工目录要求 Bearer JWT。
+- `GET /api/v1/auth/sessions/` 只返回当前用户活跃会话和 `is_current`，不返回 Token/JTI；单会话、其他会话和管理员全部会话撤销使用显式 POST action。
+- `GET/PATCH /api/v1/accounts/` 与邀请管理仅 system_admin 可用；业务角色调整只接受 `employee`/`hr_admin`。
+- 邀请创建/重发响应只返回安全元数据。`POST /auth/invitations/accept/`、密码确认和密码修改成功返回 204，不自动登录。
+- `POST /auth/password-reset/request/` 无论账号状态都返回相同 202 消息；不得从状态码、消息或 details 推断账号存在性。
 - `/me/` 返回角色和稳定 capabilities；客户端只据此显示入口，后端权限仍是授权边界。
 - Department、Position、Employee 支持 POST/PATCH 和显式状态 action，不提供 DELETE。
 - AuditEvent 只支持 GET list/detail。

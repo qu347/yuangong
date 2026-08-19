@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/errors/app_exception.dart';
@@ -45,7 +47,21 @@ class NetworkAuthRepository implements AuthRepository {
     try {
       final tokenPayload = await _apiClient.postMap(
         ApiEndpoints.login,
-        data: {'username': username, 'password': password},
+        data: {
+          'identifier': username,
+          'password': password,
+          'client_platform': Platform.isWindows
+              ? 'windows'
+              : Platform.isAndroid
+              ? 'android'
+              : 'unknown',
+          'client_name': Platform.isWindows
+              ? 'Windows 客户端'
+              : Platform.isAndroid
+              ? 'Android 客户端'
+              : 'Flutter 客户端',
+          'app_version': '0.1.0',
+        },
         authenticated: false,
       );
       final tokens = AuthTokens.fromJson(tokenPayload);

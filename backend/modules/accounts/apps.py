@@ -5,3 +5,6 @@ class AccountsConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "modules.accounts"
     verbose_name = "账号"
+
+    def ready(self):
+        from . import schema  # noqa: F401

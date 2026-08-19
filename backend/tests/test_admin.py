@@ -1,7 +1,7 @@
 import pytest
 from django.contrib import admin
 
-from modules.accounts.models import User
+from modules.accounts.models import AccountInvitation, AccountSession, PasswordResetChallenge, User
 from modules.audit.models import AuditEvent
 from modules.employees.models import Employee
 from modules.organizations.models import Department, Position
@@ -57,3 +57,27 @@ def test_department_admin_create_and_update_are_audited(rf):
     assert AuditEvent.objects.get(action="update").changes == {
         "name": {"from": "后台审计部", "to": "后台审计更新部"}
     }
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("model", "forbidden_fields"),
+    [
+        (AccountInvitation, {"token_digest"}),
+        (PasswordResetChallenge, {"token_digest"}),
+        (AccountSession, {"current_refresh_jti"}),
+    ],
+)
+def test_account_security_admin_is_read_only_and_hides_sensitive_identifiers(
+    rf,
+    model,
+    forbidden_fields,
+):
+    assert admin.site.is_registered(model)
+    model_admin = admin.site._registry[model]
+    request = rf.get("/admin/accounts/")
+
+    assert model_admin.has_add_permission(request) is False
+    assert model_admin.has_change_permission(request) is False
+    assert model_admin.has_delete_permission(request) is False
+    assert forbidden_fields.isdisjoint(model_admin.get_fields(request))

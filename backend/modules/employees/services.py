@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
 from rest_framework.exceptions import ValidationError
 
+from modules.accounts.sessions import revoke_all_account_sessions
 from modules.accounts.tokens import revoke_all_user_tokens
 from modules.audit.services import record_audit_event
 from modules.common.exceptions import BusinessConflict
@@ -137,6 +138,7 @@ def depart_employee(*, employee_id, actor, request_id=None):
         if employee.user is not None and employee.user.is_active:
             employee.user.is_active = False
             employee.user.save(update_fields=["is_active", "updated_at"])
+            revoke_all_account_sessions(employee.user, reason="employee_departed")
             revoked_sessions = revoke_all_user_tokens(employee.user)
             record_audit_event(
                 actor=actor,

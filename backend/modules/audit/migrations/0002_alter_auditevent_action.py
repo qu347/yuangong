@@ -1,0 +1,39 @@
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+    dependencies = [
+        ("audit", "0001_initial"),
+    ]
+
+    operations = [
+        migrations.AlterField(
+            model_name="auditevent",
+            name="action",
+            field=models.CharField(
+                choices=[
+                    ("create", "创建"),
+                    ("update", "更新"),
+                    ("activate", "启用"),
+                    ("deactivate", "停用"),
+                    ("depart", "离职"),
+                    ("reactivate", "恢复在职"),
+                    ("account_deactivate", "账号停用"),
+                    ("logout", "退出"),
+                    ("logout_all", "退出全部会话"),
+                    ("session_revoked", "会话撤销"),
+                    ("other_sessions_revoked", "其他会话撤销"),
+                    ("all_sessions_revoked", "全部会话撤销"),
+                    ("account_invitation_created", "账号邀请创建"),
+                    ("account_invitation_resent", "账号邀请重发"),
+                    ("account_invitation_revoked", "账号邀请撤销"),
+                    ("account_invitation_accepted", "账号邀请接受"),
+                    ("password_changed", "密码修改"),
+                    ("password_reset_completed", "密码重置完成"),
+                    ("account_activated", "账号恢复"),
+                    ("account_role_changed", "账号角色变更"),
+                ],
+                max_length=32,
+            ),
+        ),
+    ]

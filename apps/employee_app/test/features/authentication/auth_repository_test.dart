@@ -92,7 +92,7 @@ void main() {
     ).thenAnswer((_) async => currentUserPayload);
 
     final user = await repository.login(
-      username: 'directory_demo',
+      username: 'directory@example.invalid',
       password: 'test-only-password',
     );
 
@@ -102,6 +102,17 @@ void main() {
     expect(user.capabilities.canManagePositions, isFalse);
     expect(tokenStorage.accessToken, 'access-test-value');
     expect(tokenStorage.refreshToken, 'refresh-test-value');
+    final captured =
+        verify(
+              () => apiClient.postMap(
+                ApiEndpoints.login,
+                data: captureAny(named: 'data'),
+                authenticated: false,
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
+    expect(captured['identifier'], 'directory@example.invalid');
+    expect(captured.containsKey('username'), isFalse);
   });
 
   test(

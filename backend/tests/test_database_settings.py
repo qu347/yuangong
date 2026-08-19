@@ -75,6 +75,35 @@ def test_test_settings_use_postgresql_environment_when_requested():
     }
 
 
+def test_test_settings_use_redis_environment_when_requested():
+    environment = _minimal_subprocess_environment()
+    environment.update(
+        {
+            "TEST_CACHE_ENGINE": "redis",
+            "REDIS_URL": "redis://redis-service:6379/15",
+        }
+    )
+    script = (
+        "import json; "
+        "from config.settings.test import CACHES; "
+        "print(json.dumps(CACHES['default'], sort_keys=True))"
+    )
+
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=os.path.dirname(os.path.dirname(__file__)),
+        env=environment,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert json.loads(result.stdout) == {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://redis-service:6379/15",
+    }
+
+
 @pytest.mark.django_db
 def test_database_vendor_matches_the_requested_test_backend():
     """Catches an integration job wired to a different database backend."""
