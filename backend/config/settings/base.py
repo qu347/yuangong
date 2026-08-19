@@ -94,6 +94,7 @@ DEFAULT_FROM_EMAIL = env("DJANGO_DEFAULT_FROM_EMAIL", default="no-reply@example.
 ACCOUNT_INVITATION_TTL = timedelta(hours=48)
 PASSWORD_RESET_TTL = timedelta(minutes=30)
 PASSWORD_RESET_REQUEST_LIMIT = 5
+AUDIT_EXPORT_MAX_ROWS = env.int("AUDIT_EXPORT_MAX_ROWS", default=10000)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

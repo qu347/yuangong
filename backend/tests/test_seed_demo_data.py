@@ -61,6 +61,7 @@ def test_seed_demo_data_is_idempotent_and_uses_only_fictional_directory_data(mon
         ("accounts", "add_accountinvitation"),
         ("accounts", "view_accountinvitation"),
         ("accounts", "change_accountinvitation"),
+        ("audit", "export_auditevent"),
     }
     assert (
         set(

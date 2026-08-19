@@ -53,3 +53,16 @@ def test_sync_rbac_grants_management_permissions_without_delete_permissions():
             ("organizations", "change_position"),
         }
         assert not any(codename.startswith("delete_") for _, codename in permissions)
+
+    hr_permissions = set(
+        Group.objects.get(name="hr_admin").permissions.values_list(
+            "content_type__app_label", "codename"
+        )
+    )
+    system_permissions = set(
+        Group.objects.get(name="system_admin").permissions.values_list(
+            "content_type__app_label", "codename"
+        )
+    )
+    assert ("audit", "export_auditevent") not in hr_permissions
+    assert ("audit", "export_auditevent") in system_permissions

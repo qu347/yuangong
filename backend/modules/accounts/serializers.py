@@ -164,6 +164,7 @@ class CurrentUserSerializer(serializers.Serializer):
                 ("organizations.add_position", "organizations.change_position")
             ),
             "can_view_audit": user.has_perm("audit.view_auditevent"),
+            "can_export_audit": user.has_perm("audit.export_auditevent"),
             "can_logout_all": user.is_authenticated,
             "can_manage_accounts": user.has_perm("accounts.change_user"),
             "can_invite_accounts": user.has_perm("accounts.add_accountinvitation"),

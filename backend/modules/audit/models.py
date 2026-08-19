@@ -37,6 +37,7 @@ class AuditEvent(models.Model):
         PASSWORD_RESET_COMPLETED = "password_reset_completed", "密码重置完成"
         ACCOUNT_ACTIVATED = "account_activated", "账号恢复"
         ACCOUNT_ROLE_CHANGED = "account_role_changed", "账号角色变更"
+        AUDIT_EXPORTED = "audit_exported", "审计导出"
 
     class Source(models.TextChoices):
         API = "api", "API"
@@ -70,6 +71,7 @@ class AuditEvent(models.Model):
         ]
         verbose_name = "审计事件"
         verbose_name_plural = "审计事件"
+        permissions = [("export_auditevent", "Can export audit events")]
 
     def __str__(self):
         return f"{self.action}:{self.resource_type}:{self.resource_id}"
