@@ -23,6 +23,11 @@
 - `/me/` 返回角色和稳定 capabilities；客户端只据此显示入口，后端权限仍是授权边界。
 - Department、Position、Employee 支持 POST/PATCH 和显式状态 action，不提供 DELETE。
 - AuditEvent 支持只读 list/detail；`GET /api/v1/audit-events/export.csv` 仅允许 system_admin，并复用 actor/action/resource/time/ordering 白名单筛选。
+- `GET /api/v1/dashboard/summary/` 对所有已认证角色返回员工/部门/岗位聚合；最近操作只对具备审计读取权限的角色返回。
+- `GET /api/v1/statistics/hr/` 只允许 HR/system 管理员，返回部门人数、岗位数、入职趋势和有数据时的性别/年龄分布。
+- `GET /api/v1/departments/tree/` 一次查询返回最多 12 层的组织树、状态和员工人数。
+- `GET /api/v1/search/` 使用 `q`、`page`、`page_size` 搜索员工、部门和岗位；默认 20，单页最大 50。
+- `GET /api/v1/notifications/` 只返回当前用户通知和未读数；`PATCH /api/v1/notifications/{id}/read/` 幂等标记已读。
 - `health`、OpenAPI schema 和 docs 保持公开。
 
 目录写操作使用 Django model permissions：`employee` 只读；`hr_admin`、`system_admin` 可新增、修改和执行状态 action，并可读取审计。`sync_rbac` 幂等补齐权限，不移除额外授权。
@@ -39,6 +44,8 @@
 - `department`：部门 UUID。
 - `status`：`active` 或 `departed`。
 - `ordering`：只允许 `employee_no`、`full_name`、`hire_date`、`created_at` 及倒序形式。
+
+员工详情在原目录字段基础上增加可选 `avatar_url`、`gender`、`birthday`、`office_location`、直属负责人摘要 `manager` 和 `description`。头像仅接受 HTTPS URL；不提供上传。禁止身份证、银行卡、工资、家庭住址和健康信息。
 
 ## 错误
 
