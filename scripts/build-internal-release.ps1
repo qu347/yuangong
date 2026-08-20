@@ -8,21 +8,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot "release-common.ps1")
 
 function Stop-Safely {
     param([Parameter(Mandatory = $true)][string]$Code)
     throw "Internal release build failed: $Code."
-}
-
-function Invoke-Checked {
-    param(
-        [Parameter(Mandatory = $true)][string]$Code,
-        [Parameter(Mandatory = $true)][scriptblock]$Command
-    )
-    & $Command
-    if ($LASTEXITCODE -ne 0) {
-        Stop-Safely $Code
-    }
 }
 
 function Get-ApkSigner {
@@ -161,7 +151,7 @@ try {
                 ANDROID_KEY_PASSWORD = $Password
             }
             $Keytool = (Get-Command "keytool" -ErrorAction Stop).Source
-            Invoke-Checked "temporary_keystore_failed" {
+            Invoke-ReleaseNativeChecked "temporary_keystore_failed" {
                 & $Keytool -genkeypair -keystore $KeystorePath -storepass $Password `
                     -keypass $Password -alias "validation-only" -keyalg RSA -keysize 2048 `
                     -validity 2 -dname "CN=Validation Only, O=Non Distributable" -noprompt *> $null
@@ -176,7 +166,7 @@ try {
         Set-ProcessEnvironment -Values $SigningValues -OriginalValues $EnvironmentOriginals
         Push-Location $FlutterRoot
         try {
-            Invoke-Checked "android_release_build_failed" {
+            Invoke-ReleaseNativeChecked "android_release_build_failed" {
                 flutter build apk --release "--dart-define-from-file=$ConfigPath"
             }
         } finally {
@@ -215,7 +205,7 @@ try {
         try {
             Push-Location $FlutterRoot
             try {
-                Invoke-Checked "windows_release_build_failed" {
+                Invoke-ReleaseNativeChecked "windows_release_build_failed" {
                     flutter build windows --release "--dart-define-from-file=$ConfigPath"
                 }
             } finally {
@@ -236,7 +226,7 @@ try {
         $WindowsIdentity = $null
         if ($WindowsSigningPresent -eq $WindowsSigningNames.Count) {
             $SignTool = (Get-Command "signtool" -ErrorAction Stop).Source
-            Invoke-Checked "windows_signing_failed" {
+            Invoke-ReleaseNativeChecked "windows_signing_failed" {
                 & $SignTool sign /fd SHA256 /td SHA256 `
                     /f $WindowsSigningValues[0] /p $WindowsSigningValues[1] `
                     /tr $WindowsSigningValues[2] $WindowsExe *> $null
@@ -298,7 +288,7 @@ try {
         (($SumLines -join "`n") + "`n"),
         [System.Text.Encoding]::ASCII
     )
-    Invoke-Checked "artifact_verification_failed" {
+    Invoke-ReleaseNativeChecked "artifact_verification_failed" {
         & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $VerifierScript -ManifestPath $ManifestPath
     }
     Move-Item -LiteralPath $TempOutput -Destination $OutputPath

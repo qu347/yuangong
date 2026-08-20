@@ -4,6 +4,7 @@ Set-StrictMode -Version Latest
 $RepositoryRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $IdentityScript = Join-Path $RepositoryRoot "scripts\validate-release-identity.ps1"
 $BuildScript = Join-Path $RepositoryRoot "scripts\build-internal-release.ps1"
+$ReleaseCommonScript = Join-Path $RepositoryRoot "scripts\release-common.ps1"
 $VerifierScript = Join-Path $RepositoryRoot "scripts\verify-release-artifacts.ps1"
 $ValidationConfig = Join-Path $RepositoryRoot "config\release.validation.json"
 
@@ -23,6 +24,28 @@ function Invoke-ExpectedExit {
     if ($ActualCode -ne $Code) {
         throw "Expected exit code $Code but received $ActualCode."
     }
+}
+
+if (-not (Test-Path -LiteralPath $ReleaseCommonScript -PathType Leaf)) {
+    throw "Release native command helper is missing."
+}
+. $ReleaseCommonScript
+
+Invoke-ReleaseNativeChecked -Code "warning_only" -Command {
+    & powershell.exe -NoProfile -Command `
+        "[Console]::Error.WriteLine('expected warning'); exit 0" *> $null
+}
+
+$NativeFailureObserved = $false
+try {
+    Invoke-ReleaseNativeChecked -Code "expected_failure" -Command {
+        & powershell.exe -NoProfile -Command "exit 9" *> $null
+    }
+} catch {
+    $NativeFailureObserved = $true
+}
+if (-not $NativeFailureObserved) {
+    throw "Nonzero native command exit was not rejected."
 }
 
 Invoke-ExpectedExit 1 {

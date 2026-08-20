@@ -32,3 +32,13 @@ def test_production_image_runs_non_root_without_automatic_migration_or_runserver
     assert "runserver" not in dockerfile
     assert "migrate" not in entrypoint
     assert 'exec "$@"' in entrypoint
+
+
+def test_production_healthcheck_marks_internal_http_as_forwarded_https():
+    compose = yaml.safe_load(COMPOSE_FILE.read_text(encoding="utf-8"))
+    api = compose["services"]["api"]
+    health_command = " ".join(api["healthcheck"]["test"])
+
+    assert api["environment"]["DJANGO_TRUST_X_FORWARDED_PROTO"] == "true"
+    assert "X-Forwarded-Proto" in health_command
+    assert "https" in health_command
