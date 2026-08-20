@@ -11,7 +11,12 @@ from modules.employees.models import Employee
 from .models import AccountInvitation, User, normalize_account_email
 from .notifications import AccountNotificationService
 from .password_validation import validate_account_password
-from .security_tokens import digest_one_time_token, generate_one_time_token
+from .security_tokens import (
+    UnknownTokenKey,
+    digest_one_time_token,
+    generate_one_time_token,
+    token_key_id_from_raw,
+)
 
 INVITATION_PURPOSE = "account_invitation"
 
@@ -72,7 +77,7 @@ def create_invitation(
             email=normalized_email,
             target_role=target_role,
         )
-        raw_token, digest = generate_one_time_token(INVITATION_PURPOSE)
+        raw_token, digest, key_id = generate_one_time_token(INVITATION_PURPOSE)
         expires_at = now + settings.ACCOUNT_INVITATION_TTL
         try:
             invitation = AccountInvitation.objects.create(
@@ -81,6 +86,7 @@ def create_invitation(
                 username=normalized_username,
                 target_role=target_role,
                 token_digest=digest,
+                token_key_id=key_id,
                 expires_at=expires_at,
                 created_by=actor,
                 last_sent_at=now,
@@ -116,13 +122,21 @@ def resend_invitation(*, invitation_id, actor, notification_service=None, reques
         invitation = AccountInvitation.objects.select_for_update().get(pk=invitation_id)
         if invitation.accepted_at is not None or invitation.revoked_at is not None:
             raise BusinessConflict("邀请已结束，不能重发。", code="invalid_state_transition")
-        raw_token, digest = generate_one_time_token(INVITATION_PURPOSE)
+        raw_token, digest, key_id = generate_one_time_token(INVITATION_PURPOSE)
         invitation.token_digest = digest
+        invitation.token_key_id = key_id
         invitation.expires_at = now + settings.ACCOUNT_INVITATION_TTL
         invitation.send_count += 1
         invitation.last_sent_at = now
         invitation.save(
-            update_fields=["token_digest", "expires_at", "send_count", "last_sent_at", "updated_at"]
+            update_fields=[
+                "token_digest",
+                "token_key_id",
+                "expires_at",
+                "send_count",
+                "last_sent_at",
+                "updated_at",
+            ]
         )
         record_audit_event(
             actor=actor,
@@ -163,13 +177,18 @@ def revoke_invitation(*, invitation_id, actor, request_id=None):
 
 
 def accept_invitation(*, raw_token, new_password, request_id=None):
-    digest = digest_one_time_token(INVITATION_PURPOSE, raw_token.strip())
+    normalized_token = raw_token.strip()
+    try:
+        key_id = token_key_id_from_raw(normalized_token)
+        digest = digest_one_time_token(INVITATION_PURPOSE, normalized_token, token_key_id=key_id)
+    except UnknownTokenKey as error:
+        raise _invalid_invitation() from error
     now = timezone.now()
     with transaction.atomic():
         invitation = (
             AccountInvitation.objects.select_for_update()
             .select_related("employee")
-            .filter(token_digest=digest)
+            .filter(token_digest=digest, token_key_id=key_id)
             .first()
         )
         if (

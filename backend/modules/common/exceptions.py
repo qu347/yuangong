@@ -14,6 +14,18 @@ class BusinessConflict(APIException):
         self.error_code = code or self.default_code
 
 
+class ExportTooLarge(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "请缩小筛选范围后重试。"
+    default_code = "export_too_large"
+    error_code = "export_too_large"
+
+    def __init__(self, *, count, limit):
+        super().__init__(self.default_detail, code=self.default_code)
+        self.count = count
+        self.limit = limit
+
+
 def api_exception_handler(exc, context):
     response = exception_handler(exc, context)
     if response is None:
@@ -38,13 +50,18 @@ def api_exception_handler(exc, context):
     request = context.get("request")
     request_id = request.headers.get("X-Request-ID") if request is not None else None
 
+    details = (
+        {"count": exc.count, "limit": exc.limit}
+        if isinstance(exc, ExportTooLarge)
+        else response.data
+    )
     return Response(
         {
             "code": getattr(
                 exc, "error_code", code_by_status.get(response.status_code, "request_error")
             ),
             "message": message_by_status.get(response.status_code, "请求处理失败。"),
-            "details": response.data,
+            "details": details,
             "request_id": request_id,
         },
         status=response.status_code,

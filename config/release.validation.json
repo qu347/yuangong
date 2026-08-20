@@ -1,0 +1,6 @@
+{
+  "APP_ENV": "release-validation",
+  "API_BASE_URL": "https://validation.invalid/api/v1",
+  "PRODUCT_NAME": "企业员工管理系统（验证构建）",
+  "SUPPORT_EMAIL": "support@validation.invalid"
+}

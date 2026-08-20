@@ -26,6 +26,9 @@ SAFE_CHANGE_FIELDS = {
     "target_role",
     "role",
     "send_count",
+    "filters",
+    "row_count",
+    "format",
 }
 SENSITIVE_KEY_FRAGMENTS = {
     "authorization",

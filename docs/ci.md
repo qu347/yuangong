@@ -17,6 +17,17 @@
 
 第三方 Action 必须使用完整 commit SHA 固定版本；更新 SHA 时同步更新 ADR-0005 和 CI 契约测试。Pull Request 不上传 APK、EXE 或其他构建产物，日志中的哈希只用于证明该次构建实际产生了文件。
 
+`repository-safety` 同时使用虚构、非生产的进程级变量验证 production Compose 模板；这些值不是部署凭据，普通 Pull Request 不读取 GitHub Secrets。
+
+## 供应链与手动发布验证
+
+- `.github/dependabot.yml` 每周检查 pip、pub 和 GitHub Actions，限制并发 PR，禁止自动合并。
+- `.github/workflows/codeql.yml` 使用固定完整 SHA 的 CodeQL Action v4，仅分析 Python。GitHub CodeQL 当前不提供 Dart 分析，因此 Flutter 仍由 Dart format、Flutter analyze 和测试覆盖。
+- `.github/workflows/release-readiness.yml` 只能 `workflow_dispatch` 手动触发。它验证 production settings/镜像合同，并生成 Android 临时签名、Windows 未签名的 `NON-DISTRIBUTABLE` 构建；不上传产物、不创建 tag 或 GitHub Release。
+- CodeQL v4 使用 Node.js 24 运行时；v3 仍受支持但计划于 2026 年 12 月弃用，因此本仓库直接采用 v4。
+
+以上新增工作流不会自动成为 `main` required checks。远端 ruleset/branch protection 只有获得明确授权并确认第二名审查者后才可修改。
+
 ## 本地全量门禁
 
 先启动并等待开发服务健康：

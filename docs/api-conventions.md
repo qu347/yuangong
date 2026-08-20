@@ -22,10 +22,12 @@
 - `POST /auth/password-reset/request/` 无论账号状态都返回相同 202 消息；不得从状态码、消息或 details 推断账号存在性。
 - `/me/` 返回角色和稳定 capabilities；客户端只据此显示入口，后端权限仍是授权边界。
 - Department、Position、Employee 支持 POST/PATCH 和显式状态 action，不提供 DELETE。
-- AuditEvent 只支持 GET list/detail。
+- AuditEvent 支持只读 list/detail；`GET /api/v1/audit-events/export.csv` 仅允许 system_admin，并复用 actor/action/resource/time/ordering 白名单筛选。
 - `health`、OpenAPI schema 和 docs 保持公开。
 
 目录写操作使用 Django model permissions：`employee` 只读；`hr_admin`、`system_admin` 可新增、修改和执行状态 action，并可读取审计。`sync_rbac` 幂等补齐权限，不移除额外授权。
+
+审计导出默认最多 10000 行。超过上限返回 `400 / export_too_large`，details 只含 count/limit；成功响应为固定列 UTF-8 BOM CSV，公式危险前缀已中和。成功导出新增 `audit_exported`，只记录过滤摘要、格式与行数，不记录文件内容或完整查询字符串。
 
 ## 分页
 

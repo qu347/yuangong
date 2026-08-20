@@ -103,3 +103,28 @@ def test_openapi_schema_documents_session_tokens_and_flat_role_response():
     assert {"access", "refresh", "session"} <= set(login)
     assert {"access", "refresh"} <= set(refresh)
     assert {"id", "username", "role", "changed", "is_manageable"} <= set(role)
+
+
+@pytest.mark.django_db
+def test_openapi_schema_documents_audit_export_filters_and_csv_response():
+    schema = (
+        APIClient()
+        .get(
+            "/api/schema/",
+            HTTP_ACCEPT="application/vnd.oai.openapi+json",
+        )
+        .json()
+    )
+
+    operation = schema["paths"]["/api/v1/audit-events/export.csv"]["get"]
+    assert {
+        "actor",
+        "action",
+        "resource_type",
+        "resource_id",
+        "source",
+        "created_after",
+        "created_before",
+        "ordering",
+    } <= {parameter["name"] for parameter in operation["parameters"]}
+    assert "text/csv" in operation["responses"]["200"]["content"]

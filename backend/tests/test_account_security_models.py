@@ -103,8 +103,8 @@ def test_invitation_rejects_system_admin_target_role():
 def test_one_time_token_digest_is_purpose_scoped_and_never_equals_raw_token():
     from modules.accounts.security_tokens import digest_one_time_token, generate_one_time_token
 
-    raw_token, invitation_digest = generate_one_time_token("account_invitation")
-    reset_digest = digest_one_time_token("password_reset", raw_token)
+    raw_token, invitation_digest, key_id = generate_one_time_token("account_invitation")
+    reset_digest = digest_one_time_token("password_reset", raw_token, token_key_id=key_id)
 
     assert raw_token
     assert len(invitation_digest) == 64

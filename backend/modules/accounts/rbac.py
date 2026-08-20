@@ -27,6 +27,7 @@ SYSTEM_ADMIN_PERMISSION_KEYS = MANAGEMENT_PERMISSION_KEYS | {
     ("accounts", "add_accountinvitation"),
     ("accounts", "view_accountinvitation"),
     ("accounts", "change_accountinvitation"),
+    ("audit", "export_auditevent"),
 }
 
 

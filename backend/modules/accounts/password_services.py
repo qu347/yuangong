@@ -8,7 +8,12 @@ from modules.audit.services import record_audit_event
 from .models import PasswordResetChallenge, User
 from .notifications import AccountNotificationService
 from .password_validation import validate_account_password
-from .security_tokens import digest_one_time_token, generate_one_time_token
+from .security_tokens import (
+    UnknownTokenKey,
+    digest_one_time_token,
+    generate_one_time_token,
+    token_key_id_from_raw,
+)
 from .sessions import revoke_all_account_sessions
 from .throttles import consume_rate_limit
 from .tokens import revoke_all_user_tokens
@@ -43,10 +48,11 @@ def request_password_reset(*, identifier, notification_service=None):
         PasswordResetChallenge.objects.filter(user=user, used_at=None, revoked_at=None).update(
             revoked_at=now
         )
-        raw_token, digest = generate_one_time_token(RESET_PURPOSE)
+        raw_token, digest, key_id = generate_one_time_token(RESET_PURPOSE)
         challenge = PasswordResetChallenge.objects.create(
             user=user,
             token_digest=digest,
+            token_key_id=key_id,
             expires_at=now + settings.PASSWORD_RESET_TTL,
             requested_from=PasswordResetChallenge.RequestedFrom.APP,
         )
@@ -57,13 +63,18 @@ def request_password_reset(*, identifier, notification_service=None):
 
 
 def confirm_password_reset(*, raw_token, new_password, request_id=None):
-    digest = digest_one_time_token(RESET_PURPOSE, raw_token.strip())
+    normalized_token = raw_token.strip()
+    try:
+        key_id = token_key_id_from_raw(normalized_token)
+        digest = digest_one_time_token(RESET_PURPOSE, normalized_token, token_key_id=key_id)
+    except UnknownTokenKey as error:
+        raise ValidationError({"token": "重置码无效或已失效。"}) from error
     now = timezone.now()
     with transaction.atomic():
         challenge = (
             PasswordResetChallenge.objects.select_for_update()
             .select_related("user")
-            .filter(token_digest=digest)
+            .filter(token_digest=digest, token_key_id=key_id)
             .first()
         )
         if (

@@ -6,6 +6,8 @@
 !deploy/backend/
 !deploy/backend/Dockerfile.dev
 !deploy/backend/entrypoint.sh
+!deploy/backend/Dockerfile.production
+!deploy/backend/entrypoint.production.sh
 
 backend/.env*
 backend/.venv/
@@ -13,3 +15,4 @@ backend/.pytest_cache/
 backend/.ruff_cache/
 backend/**/__pycache__/
 backend/**/*.pyc
+backend/tests/

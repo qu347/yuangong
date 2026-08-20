@@ -150,5 +150,30 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - run: docker compose -f deploy/docker-compose.dev.yml config --quiet
+      - name: Validate production Compose contract
+        env:
+          DJANGO_SECRET_KEY: repository-safety-django
+          JWT_SIGNING_KEY: repository-safety-jwt
+          DJANGO_ALLOWED_HOSTS: pilot.internal.example.com
+          CORS_ALLOWED_ORIGINS: https://pilot.internal.example.com
+          API_PUBLIC_BASE_URL: https://pilot.internal.example.com/api/v1
+          POSTGRES_DB: employee_management
+          POSTGRES_USER: employee_app
+          POSTGRES_PASSWORD: repository-safety-postgres
+          EMAIL_HOST: smtp.internal.example.com
+          EMAIL_PORT: "587"
+          EMAIL_HOST_USER: repository-safety-smtp
+          EMAIL_HOST_PASSWORD: repository-safety-smtp-password
+          EMAIL_USE_TLS: "true"
+          EMAIL_USE_SSL: "false"
+          EMAIL_TIMEOUT: "10"
+          DEFAULT_FROM_EMAIL: no-reply@internal.example.com
+          SERVER_EMAIL: server@internal.example.com
+          ACCOUNT_TOKEN_HMAC_ACTIVE_KID: repository-safety-account-v1
+          ACCOUNT_TOKEN_HMAC_KEYS_JSON: '{"repository-safety-account-v1":"repository-safety-account-key"}'
+          AUDIT_ARCHIVE_HMAC_ACTIVE_KID: repository-safety-audit-v1
+          AUDIT_ARCHIVE_HMAC_KEYS_JSON: '{"repository-safety-audit-v1":"repository-safety-audit-key"}'
+          AUDIT_ARCHIVE_DIR: /tmp/employee-audit-repository-safety
+        run: docker compose -f deploy/docker-compose.production.example.yml config --quiet
       - shell: pwsh
         run: ./scripts/repository-safety.ps1

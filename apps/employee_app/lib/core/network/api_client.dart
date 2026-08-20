@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +19,13 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   ref.onDispose(client.close);
   return client;
 });
+
+class ApiDownload {
+  const ApiDownload({required this.bytes, required this.filename});
+
+  final Uint8List bytes;
+  final String filename;
+}
 
 class ApiClient {
   ApiClient({
@@ -202,6 +210,32 @@ class ApiClient {
     }
   }
 
+  Future<ApiDownload> downloadBytes(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await _dio.get<List<int>>(
+        path,
+        queryParameters: queryParameters,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      final data = response.data;
+      if (data == null) {
+        throw const AppException.protocol('empty download response');
+      }
+      final disposition = response.headers.value('content-disposition') ?? '';
+      final match = RegExp(r'filename="?([^";]+)').firstMatch(disposition);
+      final candidate = match?.group(1) ?? 'audit-events.csv';
+      final filename = RegExp(r'^[A-Za-z0-9._-]+[.]csv$').hasMatch(candidate)
+          ? candidate
+          : 'audit-events.csv';
+      return ApiDownload(bytes: Uint8List.fromList(data), filename: filename);
+    } on DioException catch (error) {
+      throw _mapDioException(path, error);
+    }
+  }
+
   Future<Map<String, dynamic>> postMap(
     String path, {
     Object? data,
@@ -262,7 +296,7 @@ class ApiClient {
       return nestedError;
     }
     return switch (error.response?.statusCode) {
-      400 => const AppException.validation('validation failed'),
+      400 => AppException.validation(_safeErrorCode(error.response?.data)),
       401 => const AppException.unauthorized('authentication required'),
       403 => const AppException.forbidden('permission denied'),
       409 => AppException.conflict(_safeErrorCode(error.response?.data)),
