@@ -9,12 +9,14 @@ from .models import Department, Position
 from .serializers import (
     DepartmentSerializer,
     DepartmentStatusResponseSerializer,
+    DepartmentTreeSerializer,
     DepartmentWriteSerializer,
     PositionSerializer,
     PositionStatusResponseSerializer,
     PositionWriteSerializer,
 )
 from .services import (
+    build_department_tree,
     create_department,
     create_position,
     set_department_active,
@@ -22,6 +24,16 @@ from .services import (
     update_department,
     update_position,
 )
+
+
+class DepartmentTreeView(APIView):
+    permission_classes = [DirectoryModelPermission]
+    permission_model = Department
+
+    @extend_schema(responses=DepartmentTreeSerializer(many=True))
+    def get(self, request):
+        del request
+        return Response(build_department_tree())
 
 
 class DepartmentListView(generics.ListCreateAPIView):

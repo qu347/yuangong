@@ -5,6 +5,7 @@ from .views import (
     DepartmentDeactivateView,
     DepartmentDetailView,
     DepartmentListView,
+    DepartmentTreeView,
     PositionActivateView,
     PositionDeactivateView,
     PositionDetailView,
@@ -15,6 +16,7 @@ app_name = "organizations"
 
 urlpatterns = [
     path("departments/", DepartmentListView.as_view(), name="department-list"),
+    path("departments/tree/", DepartmentTreeView.as_view(), name="department-tree"),
     path(
         "departments/<uuid:id>/",
         DepartmentDetailView.as_view(),

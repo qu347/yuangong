@@ -57,3 +57,12 @@ class DepartmentStatusResponseSerializer(serializers.Serializer):
 class PositionStatusResponseSerializer(serializers.Serializer):
     position = PositionSerializer(read_only=True)
     changed = serializers.BooleanField(read_only=True)
+
+
+class DepartmentTreeSerializer(serializers.Serializer):
+    id = serializers.UUIDField(read_only=True)
+    code = serializers.CharField(read_only=True)
+    name = serializers.CharField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    employee_count = serializers.IntegerField(read_only=True)
+    children = serializers.ListField(child=serializers.DictField(), read_only=True)

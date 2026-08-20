@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
+from django.db.models import Count
 from rest_framework.exceptions import ValidationError
 
 from modules.audit.services import record_audit_event
@@ -7,6 +8,51 @@ from modules.common.exceptions import BusinessConflict
 from modules.employees.models import Employee
 
 from .models import Department, Position
+
+MAX_DEPARTMENT_TREE_DEPTH = 12
+
+
+def build_department_tree(max_depth=MAX_DEPARTMENT_TREE_DEPTH):
+    departments = list(
+        Department.objects.annotate(employee_count=Count("employees")).order_by(
+            "sort_order", "code"
+        )
+    )
+    nodes = {
+        department.pk: {
+            "id": department.pk,
+            "code": department.code,
+            "name": department.name,
+            "status": department.status,
+            "employee_count": department.employee_count,
+            "children": [],
+        }
+        for department in departments
+    }
+    roots = []
+    parents = {department.pk: department.parent_id for department in departments}
+    for department in departments:
+        parent_id = department.parent_id
+        if parent_id is None:
+            roots.append(nodes[department.pk])
+        elif parent_id in nodes:
+            nodes[parent_id]["children"].append(nodes[department.pk])
+        else:
+            raise ValidationError("部门层级包含不存在的父部门。")
+
+    for department in departments:
+        current = department.pk
+        visited = set()
+        depth = 1
+        while parents[current] is not None:
+            if current in visited:
+                raise ValidationError("部门层级不能形成循环引用。")
+            visited.add(current)
+            current = parents[current]
+            depth += 1
+            if depth > max_depth:
+                raise ValidationError(f"部门层级最多允许 {max_depth} 层。")
+    return roots
 
 
 def _safe_value(value):
