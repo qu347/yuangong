@@ -31,8 +31,10 @@ htmlcov/
 *.keystore
 key.properties
 *.p12
+*.pfx
 *.pem
 *.key
+release-output/
 
 # Local databases and runtime files
 *.sqlite3
@@ -63,3 +65,4 @@ test-results/
 *.apk
 *.aab
 *.msix
+*-NON-DISTRIBUTABLE.zip
