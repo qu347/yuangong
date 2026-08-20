@@ -20,10 +20,7 @@ function Get-ApkSigner {
     if ($null -ne $Command) {
         return $Command.Source
     }
-    $AndroidSdkRoot = [Environment]::GetEnvironmentVariable("ANDROID_HOME", "Process")
-    if ([string]::IsNullOrWhiteSpace($AndroidSdkRoot)) {
-        $AndroidSdkRoot = [Environment]::GetEnvironmentVariable("ANDROID_SDK_ROOT", "Process")
-    }
+    $AndroidSdkRoot = Resolve-ReleaseAndroidSdkRoot
     if ([string]::IsNullOrWhiteSpace($AndroidSdkRoot)) {
         Stop-Safely "android_sdk_missing"
     }

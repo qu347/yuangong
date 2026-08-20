@@ -31,6 +31,23 @@ if (-not (Test-Path -LiteralPath $ReleaseCommonScript -PathType Leaf)) {
 }
 . $ReleaseCommonScript
 
+$ResolvedUserSdk = Resolve-ReleaseAndroidSdkRoot `
+    -ProcessAndroidHome "" `
+    -ProcessAndroidSdkRoot "" `
+    -UserAndroidHome "D:\validation-user-sdk" `
+    -UserAndroidSdkRoot ""
+if ($ResolvedUserSdk -ne "D:\validation-user-sdk") {
+    throw "User Android SDK fallback was not selected."
+}
+$ResolvedProcessSdk = Resolve-ReleaseAndroidSdkRoot `
+    -ProcessAndroidHome "D:\validation-process-sdk" `
+    -ProcessAndroidSdkRoot "" `
+    -UserAndroidHome "D:\validation-user-sdk" `
+    -UserAndroidSdkRoot ""
+if ($ResolvedProcessSdk -ne "D:\validation-process-sdk") {
+    throw "Process Android SDK did not take precedence."
+}
+
 Invoke-ReleaseNativeChecked -Code "warning_only" -Command {
     & powershell.exe -NoProfile -Command `
         "[Console]::Error.WriteLine('expected warning'); exit 0" *> $null

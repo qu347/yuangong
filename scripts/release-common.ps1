@@ -17,3 +17,24 @@ function Invoke-ReleaseNativeChecked {
         throw "Internal release command failed: $Code."
     }
 }
+
+function Resolve-ReleaseAndroidSdkRoot {
+    param(
+        [AllowEmptyString()][string]$ProcessAndroidHome = [Environment]::GetEnvironmentVariable("ANDROID_HOME", "Process"),
+        [AllowEmptyString()][string]$ProcessAndroidSdkRoot = [Environment]::GetEnvironmentVariable("ANDROID_SDK_ROOT", "Process"),
+        [AllowEmptyString()][string]$UserAndroidHome = [Environment]::GetEnvironmentVariable("ANDROID_HOME", "User"),
+        [AllowEmptyString()][string]$UserAndroidSdkRoot = [Environment]::GetEnvironmentVariable("ANDROID_SDK_ROOT", "User")
+    )
+
+    foreach ($Candidate in @(
+        $ProcessAndroidHome,
+        $ProcessAndroidSdkRoot,
+        $UserAndroidHome,
+        $UserAndroidSdkRoot
+    )) {
+        if (-not [string]::IsNullOrWhiteSpace($Candidate)) {
+            return $Candidate
+        }
+    }
+    return $null
+}
