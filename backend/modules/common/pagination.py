@@ -16,5 +16,11 @@ class DirectoryPagination(PageNumberPagination):
         except (TypeError, ValueError) as error:
             raise ValidationError({"page_size": "page_size 必须是整数。"}) from error
         if not 1 <= page_size <= self.max_page_size:
-            raise ValidationError({"page_size": "page_size 必须在 1 到 100 之间。"})
+            raise ValidationError(
+                {"page_size": f"page_size 必须在 1 到 {self.max_page_size} 之间。"}
+            )
         return page_size
+
+
+class SearchPagination(DirectoryPagination):
+    max_page_size = 50

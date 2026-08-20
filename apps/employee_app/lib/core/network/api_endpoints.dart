@@ -1,5 +1,10 @@
 abstract final class ApiEndpoints {
   static const health = 'health/';
+  static const dashboardSummary = 'dashboard/summary/';
+  static const hrStatistics = 'statistics/hr/';
+  static const globalSearch = 'search/';
+  static const departmentTree = 'departments/tree/';
+  static const notifications = 'notifications/';
   static const login = 'auth/login/';
   static const refresh = 'auth/refresh/';
   static const logout = 'auth/logout/';
