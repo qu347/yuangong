@@ -18,12 +18,15 @@ import '../../features/authentication/presentation/auth_session_store.dart';
 import '../../features/authentication/presentation/login_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
 import '../../features/departments/presentation/department_management_page.dart';
-import '../../features/departments/presentation/department_page.dart';
+import '../../features/departments/presentation/organization_tree_page.dart';
 import '../../features/employees/presentation/employee_detail_page.dart';
 import '../../features/employees/presentation/employee_form_page.dart';
 import '../../features/employees/presentation/employee_list_page.dart';
+import '../../features/notifications/presentation/notification_page.dart';
 import '../../features/positions/presentation/position_management_page.dart';
+import '../../features/search/presentation/global_search_page.dart';
 import '../../features/shell/presentation/adaptive_shell.dart';
+import '../../features/statistics/presentation/hr_statistics_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final router = createAppRouter(
@@ -74,6 +77,9 @@ GoRouter createAppRouter(
       if (location == '/audit' && !capabilities.canViewAudit) {
         return '/employees';
       }
+      if (location == '/statistics' && !capabilities.canViewAudit) {
+        return '/employees';
+      }
       if ((location == '/settings/sessions' && !capabilities.canViewSessions) ||
           (location == '/settings/security' &&
               !capabilities.canChangePassword)) {
@@ -82,7 +88,7 @@ GoRouter createAppRouter(
       if (location.startsWith('/admin/') && !capabilities.canManageAccounts) {
         return '/employees';
       }
-      return onLogin ? '/employees' : null;
+      return onLogin ? '/dashboard' : null;
     },
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
@@ -137,7 +143,19 @@ GoRouter createAppRouter(
           ),
           GoRoute(
             path: '/departments',
-            builder: (context, state) => const DepartmentPage(),
+            builder: (context, state) => const OrganizationTreePage(),
+          ),
+          GoRoute(
+            path: '/search',
+            builder: (context, state) => const GlobalSearchPage(),
+          ),
+          GoRoute(
+            path: '/notifications',
+            builder: (context, state) => const NotificationPage(),
+          ),
+          GoRoute(
+            path: '/statistics',
+            builder: (context, state) => const HrStatisticsPage(),
           ),
           GoRoute(
             path: '/departments/manage',

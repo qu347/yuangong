@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/responsive/app_breakpoints.dart';
 
@@ -40,6 +41,12 @@ const appDestinations = <AppDestination>[
     path: '/settings/security',
     icon: Icons.security_outlined,
     selectedIcon: Icons.security_rounded,
+  ),
+  AppDestination(
+    label: '通知',
+    path: '/notifications',
+    icon: Icons.notifications_none_rounded,
+    selectedIcon: Icons.notifications_rounded,
   ),
 ];
 
@@ -134,7 +141,14 @@ class AdaptiveShell extends StatelessWidget {
                   ),
                 ),
                 const VerticalDivider(width: 1),
-                Expanded(child: child),
+                Expanded(
+                  child: Column(
+                    children: [
+                      _DesktopTopBar(currentPath: currentPath),
+                      Expanded(child: child),
+                    ],
+                  ),
+                ),
               ],
             ),
           );
@@ -151,6 +165,17 @@ class AdaptiveShell extends StatelessWidget {
               ],
             ),
             actions: [
+              IconButton(
+                key: const Key('shell_search'),
+                tooltip: '全局搜索',
+                onPressed: () => context.go('/search'),
+                icon: const Icon(Icons.search_rounded),
+              ),
+              IconButton(
+                tooltip: '通知中心',
+                onPressed: () => context.go('/notifications'),
+                icon: const Icon(Icons.notifications_none_rounded),
+              ),
               if (onLogoutAll != null)
                 IconButton(
                   key: const Key('shell_logout_all'),
@@ -183,6 +208,61 @@ class AdaptiveShell extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _DesktopTopBar extends StatelessWidget {
+  const _DesktopTopBar({required this.currentPath});
+  final String currentPath;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      child: Container(
+        height: 68,
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xFFE0E5E3))),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                key: const Key('shell_search'),
+                borderRadius: BorderRadius.circular(24),
+                onTap: () => context.go('/search'),
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F4F3),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.search_rounded, size: 20),
+                      SizedBox(width: 10),
+                      Text('搜索员工、部门或岗位'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: '通知中心',
+              onPressed: currentPath == '/notifications'
+                  ? null
+                  : () => context.go('/notifications'),
+              icon: const Icon(Icons.notifications_none_rounded),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

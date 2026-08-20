@@ -31,6 +31,9 @@
 - gzip JSONL 审计归档、SHA-256/HMAC manifest、篡改验证和只读保留报告；不自动删除审计。
 - production settings/SMTP/keyring/非 root Gunicorn 镜像合同，以及 Windows/Android `NON-DISTRIBUTABLE` 发布验证。
 - PostgreSQL/Redis/Mailpit 本地 Compose、六 job 基础 CI、Dependabot、Python CodeQL 和手动 release-readiness 工作流。
+- 企业工作台聚合、HR 统计、12 层组织架构树、员工安全档案字段、员工/部门/岗位全局搜索和当前用户轻量通知。
+- HR/system 管理员可使用无第三方图表依赖的 HR 统计页面；组织树可查看部门成员；员工详情支持头像失败降级；搜索结果按员工、部门、岗位分组。
+- 幂等的 100 部门、500 岗位、10,000 员工虚构性能数据与搜索/分页/Dashboard 阈值验证。
 
 当前不包含考勤、审批、薪资、招聘、上传、多租户、MFA、外部 SSO 或生产邮件供应商。
 
@@ -100,6 +103,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\run-backend.ps1
 - `GET http://127.0.0.1:8000/api/v1/departments/`
 - `GET http://127.0.0.1:8000/api/v1/positions/`
 - `GET http://127.0.0.1:8000/api/v1/employees/`
+- `GET http://127.0.0.1:8000/api/v1/dashboard/summary/`
+- `GET http://127.0.0.1:8000/api/v1/statistics/hr/`
+- `GET http://127.0.0.1:8000/api/v1/departments/tree/`
+- `GET http://127.0.0.1:8000/api/v1/search/?q=keyword`
+- `GET http://127.0.0.1:8000/api/v1/notifications/`
 - `GET http://127.0.0.1:8000/api/v1/audit-events/export.csv`
 - `GET http://127.0.0.1:8000/api/schema/`
 - `GET http://127.0.0.1:8000/api/docs/`
@@ -205,6 +213,8 @@ flutter build apk --debug --dart-define-from-file=../../config/dev.android-emula
 不要提交 `.env`、证书、私钥、Android keystore、`key.properties`、Token、数据库导出、真实员工数据或本地设备配置。`.gitignore` 已覆盖常见文件，但提交前仍需人工检查。
 
 生产变量、审计治理和内部试用构建分别见 [生产配置](docs/production-configuration.md)、[审计治理](docs/audit-governance.md) 和 [发布检查清单](docs/release-checklist.md)。第四阶段真实结果见 [内部试用准备验收报告](docs/internal-pilot-readiness-validation-report.md)。
+
+第五阶段产品能力决策见 [ADR-0008](docs/decisions/ADR-0008-product-enhancement.md)，自动化与双平台构建结果见 [第五阶段验收报告](docs/product-enhancement-validation-report.md)。
 
 ## 下一步
 

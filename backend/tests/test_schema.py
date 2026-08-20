@@ -65,6 +65,31 @@ def test_openapi_schema_documents_directory_routes_and_filters():
 
 
 @pytest.mark.django_db
+def test_openapi_schema_documents_phase_five_product_endpoints():
+    schema = APIClient().get("/api/schema/", HTTP_ACCEPT="application/vnd.oai.openapi+json").json()
+
+    for path in (
+        "/api/v1/dashboard/summary/",
+        "/api/v1/statistics/hr/",
+        "/api/v1/departments/tree/",
+        "/api/v1/search/",
+        "/api/v1/notifications/",
+        "/api/v1/notifications/{notification_id}/read/",
+    ):
+        assert path in schema["paths"]
+
+    employee_fields = schema["components"]["schemas"]["EmployeeDetail"]["properties"]
+    assert {
+        "avatar_url",
+        "gender",
+        "birthday",
+        "office_location",
+        "manager",
+        "description",
+    } <= set(employee_fields)
+
+
+@pytest.mark.django_db
 def test_openapi_schema_documents_management_actions_with_json_responses():
     response = APIClient().get(
         "/api/schema/",
