@@ -85,6 +85,33 @@ cd backend
 
 Android 的本地 HTTP 只由 `android/app/src/debug/AndroidManifest.xml` 引用 Debug 专用 Network Security Configuration。它支持模拟器访问 `http://10.0.2.2:8000/api/v1`；不得通过该通道传输登录凭据、Token 或敏感员工数据。Staging 与 Production 必须使用 HTTPS，Release 主清单不得开启明文 HTTP。
 
+## 第四阶段本地合同
+
+严格身份检查默认拒绝开发占位符；只有本地签名链验证可显式允许占位符，并必须同时标记 ValidationOnly：
+
+```powershell
+.\scripts\validate-release-identity.ps1 -ConfigFile .\config\release.validation.json
+.\scripts\build-internal-release.ps1 `
+  -Platform all `
+  -ConfigFile .\config\release.validation.json `
+  -OutputDirectory D:\EmployeeReleaseValidation\Builds\new-run `
+  -ValidationOnly `
+  -AllowDevelopmentPlaceholders
+```
+
+输出目录必须位于仓库外且不存在。脚本生成 manifest 和 `SHA256SUMS.txt`，Android 一次性 keystore 在 `finally` 中删除，Windows 无正式证书时保持未签名。不要上传这些 ValidationOnly 产物。
+
+审计归档默认 dry-run；只有显式 `--execute` 才写文件，并且输出目录必须位于仓库外：
+
+```powershell
+.\backend\.venv\Scripts\python.exe .\backend\manage.py archive_audit_events `
+  --before 2026-01-01T00:00:00Z `
+  --output-dir D:\EmployeeAuditArchives\Validation `
+  --dry-run
+```
+
+执行归档和验证前仅在当前进程注入 HMAC keyring，不在命令、文件或日志中记录 key。完整要求见 `docs/audit-governance.md`。
+
 ## 平台生成文件
 
 Android、Windows 平台工程和依赖锁文件已经生成并提交。日常开发不得重复运行 `flutter create`；仅在明确需要重新生成平台文件时执行：
@@ -102,4 +129,5 @@ flutter pub get
 - Flutter 3.47 在中文工作区可能误算 LSP Content-Length。使用 `scripts/check.ps1`；其中的 `flutter-analysis.ps1` 会创建、验证并删除临时 ASCII junction。
 - Windows CMake/MSBuild 无 CPU 进展时，只在当前构建进程设置 `TrackFileAccess=false`，不要持久修改 Visual Studio 或系统配置。
 - 新 PowerShell 应从真实用户环境继承 `GRADLE_USER_HOME=D:\DevCaches\Gradle` 与 `PUB_CACHE=D:\DevCaches\Pub\Cache`。不要使用隔离 Gradle 目录、人工 Maven 缓存、临时代理或 `--offline` 绕过构建。
+- 若 Codex/IDE 进程早于用户环境更新启动，发布脚本会从用户级 `ANDROID_HOME` 回退定位 `apksigner`，不会改写系统环境。
 - Android aapt 36 无法直接读取中文路径 APK 时，Flutter 会回退源 Manifest；必须继续用 ADB 安装、PID、前台 Activity 和包级 FATAL 日志确认真实结果。

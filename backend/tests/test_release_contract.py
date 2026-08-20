@@ -1,7 +1,10 @@
 import hashlib
 import json
+import os
 import subprocess
 from pathlib import Path
+
+import pytest
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = REPOSITORY_ROOT / "scripts"
@@ -9,6 +12,7 @@ IDENTITY_SCRIPT = SCRIPTS / "validate-release-identity.ps1"
 BUILD_SCRIPT = SCRIPTS / "build-internal-release.ps1"
 VERIFY_SCRIPT = SCRIPTS / "verify-release-artifacts.ps1"
 GRADLE_FILE = REPOSITORY_ROOT / "apps" / "employee_app" / "android" / "app" / "build.gradle.kts"
+WINDOWS_ONLY = pytest.mark.skipif(os.name != "nt", reason="requires Windows PowerShell")
 
 
 def run_powershell(script: Path, *arguments: str):
@@ -31,6 +35,7 @@ def run_powershell(script: Path, *arguments: str):
     )
 
 
+@WINDOWS_ONLY
 def test_release_identity_rejects_placeholders_but_supports_explicit_validation_mode():
     strict = run_powershell(
         IDENTITY_SCRIPT,
@@ -57,6 +62,7 @@ def test_release_identity_rejects_placeholders_but_supports_explicit_validation_
     assert result["reasons"]
 
 
+@WINDOWS_ONLY
 def test_release_identity_rejects_http_even_when_placeholders_are_allowed(tmp_path):
     config = tmp_path / "http.json"
     config.write_text(
@@ -115,6 +121,7 @@ def test_build_script_enforces_external_fresh_output_and_validation_marking():
     assert "Remove-Item $OutputDirectory" not in text
 
 
+@WINDOWS_ONLY
 def test_release_verifier_accepts_exact_manifest_then_detects_tampering(tmp_path):
     artifact = tmp_path / "ANDROID-NON-DISTRIBUTABLE.apk"
     artifact.write_bytes(b"validation artifact")
@@ -152,6 +159,7 @@ def test_release_verifier_accepts_exact_manifest_then_detects_tampering(tmp_path
     assert "validation artifact" not in (tampered.stdout + tampered.stderr)
 
 
+@WINDOWS_ONLY
 def test_release_verifier_rejects_unlisted_files(tmp_path):
     artifact = tmp_path / "WINDOWS-UNSIGNED-NON-DISTRIBUTABLE.zip"
     artifact.write_bytes(b"zip placeholder")

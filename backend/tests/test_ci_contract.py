@@ -210,3 +210,21 @@ def test_repository_safety_job_checks_both_compose_contracts():
 
     assert "docker-compose.dev.yml config --quiet" in text
     assert "docker-compose.production.example.yml config --quiet" in text
+
+
+def test_local_check_runs_phase_four_contracts_and_mounts_their_inputs():
+    text = CHECK_SCRIPT.read_text(encoding="utf-8")
+
+    for fragment in (
+        "test_production_settings.py",
+        "test_production_compose.py",
+        "test_audit_archive.py",
+        "test_release_contract.py",
+        "release-scripts.tests.ps1",
+        "docker-compose.production.example.yml",
+        "${RepositoryRoot}\\SECURITY.md:/app/SECURITY.md:ro",
+        "${RepositoryRoot}\\docs:/app/docs:ro",
+        "${RepositoryRoot}\\apps:/app/apps:ro",
+        "${RepositoryRoot}\\config:/app/config:ro",
+    ):
+        assert fragment in text

@@ -1,6 +1,6 @@
 # 企业员工管理系统
 
-面向企业内部员工的 Windows 与 Android 管理客户端。当前已完成员工目录、HR 维护、RBAC/审计，以及账号邀请、密码恢复、账号生命周期和多设备会话安全闭环；仍不包含考勤、审批、薪资等完整人力资源业务。
+面向企业内部员工的 Windows 与 Android 管理客户端。当前已完成员工目录、HR 维护、RBAC/审计、账号与会话安全，以及受控审计导出、可验证归档、生产配置合同和内部试用构建验证；仍不包含考勤、审批、薪资等完整人力资源业务。
 
 ## 平台范围
 
@@ -27,7 +27,10 @@
 - 员工姓名/工号/工作邮箱搜索，部门和在职状态筛选，受限分页与排序。
 - Windows 宽屏表格、Android 紧凑卡片、员工详情和部门层级。
 - Django model-permission RBAC、append-only 审计、Django Admin 和幂等虚构演示数据命令。
-- PostgreSQL/Redis/Mailpit 本地 Compose 与六 job GitHub Actions 基础 CI。
+- system_admin 专属审计 CSV 导出、公式注入防护、导出上限和导出行为自身审计。
+- gzip JSONL 审计归档、SHA-256/HMAC manifest、篡改验证和只读保留报告；不自动删除审计。
+- production settings/SMTP/keyring/非 root Gunicorn 镜像合同，以及 Windows/Android `NON-DISTRIBUTABLE` 发布验证。
+- PostgreSQL/Redis/Mailpit 本地 Compose、六 job 基础 CI、Dependabot、Python CodeQL 和手动 release-readiness 工作流。
 
 当前不包含考勤、审批、薪资、招聘、上传、多租户、MFA、外部 SSO 或生产邮件供应商。
 
@@ -97,6 +100,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\run-backend.ps1
 - `GET http://127.0.0.1:8000/api/v1/departments/`
 - `GET http://127.0.0.1:8000/api/v1/positions/`
 - `GET http://127.0.0.1:8000/api/v1/employees/`
+- `GET http://127.0.0.1:8000/api/v1/audit-events/export.csv`
 - `GET http://127.0.0.1:8000/api/schema/`
 - `GET http://127.0.0.1:8000/api/docs/`
 
@@ -200,8 +204,10 @@ flutter build apk --debug --dart-define-from-file=../../config/dev.android-emula
 
 不要提交 `.env`、证书、私钥、Android keystore、`key.properties`、Token、数据库导出、真实员工数据或本地设备配置。`.gitignore` 已覆盖常见文件，但提交前仍需人工检查。
 
+生产变量、审计治理和内部试用构建分别见 [生产配置](docs/production-configuration.md)、[审计治理](docs/audit-governance.md) 和 [发布检查清单](docs/release-checklist.md)。第四阶段真实结果见 [内部试用准备验收报告](docs/internal-pilot-readiness-validation-report.md)。
+
 ## 下一步
 
-第三阶段已经具备账号邀请/恢复、密码安全、多设备会话、`sid` 即时吊销和基础 CI。设计与验收证据见 [ADR-0005](docs/decisions/ADR-0005-account-lifecycle-session-security.md) 和 [第三阶段验收报告](docs/account-lifecycle-security-validation-report.md)。
+第四阶段已经具备内部试用交付的代码和本地验证基础，但正式身份、SMTP、Android/Windows 正式证书、审计法定保留期限、仓库 visibility 与 main 保护仍需公司决策和授权。
 
-下一阶段只考虑审计导出/保留/归档、正式 applicationId/Windows publisher、生产邮件供应商、branch protection 与发布准备。不要直接跳到考勤、审批或薪资。
+下一阶段只考虑正式内测试点部署、SMTP 接入、正式签名、受控分发、备份恢复与监控告警。不要直接跳到考勤、审批或薪资。
