@@ -8,6 +8,14 @@ CHECK_SCRIPT = REPOSITORY_ROOT / "scripts" / "check.ps1"
 COMPOSE_FILE = REPOSITORY_ROOT / "deploy" / "docker-compose.dev.yml"
 DEV_ENTRYPOINT = REPOSITORY_ROOT / "deploy" / "backend" / "entrypoint.sh"
 REPOSITORY_SAFETY_SCRIPT = REPOSITORY_ROOT / "scripts" / "repository-safety.ps1"
+DEPENDABOT_FILE = REPOSITORY_ROOT / ".github" / "dependabot.yml"
+RELEASE_READINESS_WORKFLOW = REPOSITORY_ROOT / ".github" / "workflows" / "release-readiness.yml"
+CODEQL_WORKFLOW = REPOSITORY_ROOT / ".github" / "workflows" / "codeql.yml"
+SECURITY_POLICY = REPOSITORY_ROOT / "SECURITY.md"
+PR_TEMPLATE = REPOSITORY_ROOT / ".github" / "pull_request_template.md"
+GITHUB_GOVERNANCE = REPOSITORY_ROOT / "docs" / "github-governance.md"
+RELEASE_CHECKLIST = REPOSITORY_ROOT / "docs" / "release-checklist.md"
+CODEQL_ACTION_SHA = "faaa5d804fc648d0fdb28822a8e36cf7d0a6132c"
 
 
 def load_workflow():
@@ -113,3 +121,92 @@ def test_repository_safety_normalizes_the_success_exit_code():
     text = REPOSITORY_SAFETY_SCRIPT.read_text(encoding="utf-8")
 
     assert text.rstrip().endswith("exit 0")
+
+
+def test_dependabot_covers_each_ecosystem_without_auto_merge():
+    config = yaml.load(DEPENDABOT_FILE.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    updates = config["updates"]
+    by_ecosystem = {item["package-ecosystem"]: item for item in updates}
+
+    assert set(by_ecosystem) == {"pip", "pub", "github-actions"}
+    assert by_ecosystem["pip"]["directory"] == "/backend"
+    assert by_ecosystem["pub"]["directory"] == "/apps/employee_app"
+    assert by_ecosystem["github-actions"]["directory"] == "/"
+    for item in updates:
+        assert item["schedule"]["interval"] == "weekly"
+        assert item["open-pull-requests-limit"] == "5"
+    assert "auto-merge" not in DEPENDABOT_FILE.read_text(encoding="utf-8").lower()
+
+
+def test_release_readiness_is_manual_non_publishing_and_minimally_privileged():
+    workflow = yaml.load(
+        RELEASE_READINESS_WORKFLOW.read_text(encoding="utf-8"), Loader=yaml.BaseLoader
+    )
+    text = RELEASE_READINESS_WORKFLOW.read_text(encoding="utf-8")
+
+    assert set(workflow["on"]) == {"workflow_dispatch"}
+    assert workflow["permissions"] == {"contents": "read"}
+    assert workflow["concurrency"]["cancel-in-progress"] == "true"
+    assert "pull_request_target" not in text
+    assert "upload-artifact" not in text
+    assert "secrets." not in text
+    assert "build-internal-release.ps1" in text
+    assert "-ValidationOnly" in text
+    assert "docker compose" in text
+    assert "Dockerfile.production" in text
+
+
+def test_codeql_is_python_only_pinned_and_uses_required_permissions():
+    workflow = yaml.load(CODEQL_WORKFLOW.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    text = CODEQL_WORKFLOW.read_text(encoding="utf-8")
+
+    assert set(workflow["on"]) == {"push", "pull_request", "schedule"}
+    assert workflow["permissions"] == {"contents": "read", "security-events": "write"}
+    assert workflow["jobs"]["analyze"]["strategy"]["matrix"]["language"] == ["python"]
+    assert f"github/codeql-action/init@{CODEQL_ACTION_SHA}" in text
+    assert f"github/codeql-action/analyze@{CODEQL_ACTION_SHA}" in text
+    assert "dart" not in text.lower()
+    assert "pull_request_target" not in text
+
+
+def test_all_governance_workflow_actions_are_pinned_to_full_shas():
+    for path in (RELEASE_READINESS_WORKFLOW, CODEQL_WORKFLOW):
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if "uses:" not in line:
+                continue
+            reference = line.split("uses:", 1)[1].strip().split()[0]
+            assert "@" in reference
+            assert len(reference.rsplit("@", 1)[1]) == 40
+
+
+def test_security_pr_and_governance_documents_record_unapplied_decisions():
+    security = SECURITY_POLICY.read_text(encoding="utf-8")
+    pr_template = PR_TEMPLATE.read_text(encoding="utf-8")
+    governance = GITHUB_GOVERNANCE.read_text(encoding="utf-8")
+    release = RELEASE_CHECKLIST.read_text(encoding="utf-8")
+
+    assert "Security Advisories" in security
+    assert "mailto:" not in security.lower()
+    for phrase in ("依赖", "生产配置", "审计", "发布身份", "外部决策"):
+        assert phrase in pr_template
+    for phrase in (
+        "public",
+        "main",
+        "未应用",
+        "backend-sqlite",
+        "backend-postgresql",
+        "flutter-quality",
+        "android-build",
+        "windows-build",
+        "repository-safety",
+    ):
+        assert phrase in governance
+    assert "NON-DISTRIBUTABLE" in release
+    assert not (REPOSITORY_ROOT / ".github" / "CODEOWNERS").exists()
+
+
+def test_repository_safety_job_checks_both_compose_contracts():
+    text = WORKFLOW.read_text(encoding="utf-8")
+
+    assert "docker-compose.dev.yml config --quiet" in text
+    assert "docker-compose.production.example.yml config --quiet" in text
