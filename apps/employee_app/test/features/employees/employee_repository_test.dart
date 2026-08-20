@@ -26,6 +26,16 @@ const employeeJson = <String, dynamic>{
   },
   'employment_status': 'active',
   'hire_date': '2023-05-08',
+  'avatar_url': 'https://assets.example.test/avatar.png',
+  'gender': 'female',
+  'birthday': '1992-06-08',
+  'office_location': '上海 A 座 8F',
+  'manager': {
+    'id': '00000000-0000-0000-0000-000000000202',
+    'employee_no': 'EMP-0009',
+    'full_name': '直属负责人',
+  },
+  'description': '负责企业产品体验。',
   'updated_at': '2026-08-17T15:30:00+08:00',
 };
 
@@ -125,6 +135,12 @@ void main() {
 
     expect(employee.fullName, '林知远');
     expect(employee.workEmail, 'lin.zhiyuan@example.test');
+    expect(employee.avatarUrl, 'https://assets.example.test/avatar.png');
+    expect(employee.gender, 'female');
+    expect(employee.birthday, DateTime(1992, 6, 8));
+    expect(employee.officeLocation, '上海 A 座 8F');
+    expect(employee.manager?.fullName, '直属负责人');
+    expect(employee.description, '负责企业产品体验。');
   });
 
   test('maps malformed employee data into a safe data failure', () async {

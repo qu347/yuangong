@@ -233,7 +233,9 @@ def test_employee_list_rejects_invalid_filter_or_page_size(
 
 
 @pytest.mark.django_db
-def test_employee_detail_returns_only_directory_fields(authenticated_client, directory_data):
+def test_employee_detail_returns_only_directory_safe_profile_fields(
+    authenticated_client, directory_data
+):
     employee = directory_data["employees"][0]
 
     response = authenticated_client.get(f"/api/v1/employees/{employee.id}/")
@@ -259,6 +261,12 @@ def test_employee_detail_returns_only_directory_fields(authenticated_client, dir
         },
         "employment_status": "active",
         "hire_date": "2023-05-08",
+        "avatar_url": "",
+        "gender": "unspecified",
+        "birthday": None,
+        "office_location": "",
+        "manager": None,
+        "description": "",
     }
     assert (
         authenticated_client.get(

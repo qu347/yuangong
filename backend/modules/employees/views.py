@@ -50,7 +50,7 @@ class EmployeeListView(generics.ListCreateAPIView):
         return EmployeeSerializer if self.request.method == "GET" else EmployeeWriteSerializer
 
     def get_queryset(self):
-        queryset = Employee.objects.select_related("department", "position").all()
+        queryset = Employee.objects.select_related("department", "position", "manager").all()
         department = self.request.query_params.get("department")
         if department:
             try:
@@ -80,7 +80,7 @@ class EmployeeListView(generics.ListCreateAPIView):
 
 
 class EmployeeDetailView(generics.RetrieveUpdateAPIView):
-    queryset = Employee.objects.select_related("department", "position").all()
+    queryset = Employee.objects.select_related("department", "position", "manager").all()
     lookup_url_kwarg = "id"
     permission_classes = [DirectoryModelPermission]
     permission_model = Employee

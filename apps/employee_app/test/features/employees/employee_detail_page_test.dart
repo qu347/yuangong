@@ -25,6 +25,13 @@ final detailEmployee = Employee(
   ),
   employmentStatus: 'active',
   hireDate: DateTime(2023, 5, 8),
+  officeLocation: '上海 A 座 8F',
+  manager: const EmployeeReference(
+    id: '00000000-0000-0000-0000-000000000202',
+    employeeNo: 'EMP-0009',
+    fullName: '直属负责人',
+  ),
+  description: '负责企业产品体验。',
 );
 
 class DetailEmployeeRepository extends EmployeeRepository {
@@ -68,6 +75,57 @@ Widget detailHarness(DetailEmployeeRepository repository) {
 }
 
 void main() {
+  testWidgets('employee avatar prefers a configured network image', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: EmployeeAvatar(
+          fullName: '林知远',
+          avatarUrl: 'https://assets.example.test/avatar.png',
+        ),
+      ),
+    );
+
+    final image = tester.widget<Image>(find.byType(Image));
+    expect(
+      image.image,
+      isA<NetworkImage>().having(
+        (provider) => provider.url,
+        'url',
+        'https://assets.example.test/avatar.png',
+      ),
+    );
+    expect(find.text('林'), findsNothing);
+  });
+
+  testWidgets('employee avatar falls back to initial after image failure', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: EmployeeAvatar(
+          fullName: '林知远',
+          avatarUrl: 'https://invalid.invalid/avatar.png',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('林'), findsOneWidget);
+  });
+
+  testWidgets('employee avatar uses initial when url is empty', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: EmployeeAvatar(fullName: '林知远', avatarUrl: ''),
+      ),
+    );
+
+    expect(find.byType(Image), findsNothing);
+    expect(find.text('林'), findsOneWidget);
+  });
+
   testWidgets('shows only directory-safe employee detail fields', (
     tester,
   ) async {
@@ -85,6 +143,9 @@ void main() {
       '软件工程师',
       '在职',
       '2023-05-08',
+      '上海 A 座 8F',
+      '直属负责人',
+      '负责企业产品体验。',
     ]) {
       expect(find.text(text), findsWidgets);
     }
