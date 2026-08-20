@@ -15,6 +15,7 @@ from .invitation_views import (
     InvitationResendView,
     InvitationRevokeView,
 )
+from .notification_views import NotificationListView, NotificationReadView
 from .password_views import PasswordChangeView, PasswordResetConfirmView, PasswordResetRequestView
 from .session_views import RevokeOtherSessionsView, SessionListView, SessionRevokeView
 from .views import LoginView, LogoutAllView, LogoutView, MeView, RefreshView
@@ -88,4 +89,10 @@ urlpatterns = [
     ),
     path("auth/password/change/", PasswordChangeView.as_view(), name="password-change"),
     path("me/", MeView.as_view(), name="me"),
+    path("notifications/", NotificationListView.as_view(), name="notification-list"),
+    path(
+        "notifications/<uuid:notification_id>/read/",
+        NotificationReadView.as_view(),
+        name="notification-read",
+    ),
 ]

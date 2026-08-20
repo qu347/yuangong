@@ -165,3 +165,30 @@ class AccountSession(models.Model):
 
     def __str__(self):
         return f"{self.user_id}:{self.client_platform}:{self.id}"
+
+
+class Notification(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
+    title = models.CharField(max_length=120)
+    content = models.TextField(max_length=1000)
+    read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        indexes = [
+            models.Index(
+                fields=["user", "read", "created_at"],
+                name="acct_notice_user_read_idx",
+            )
+        ]
+        verbose_name = "通知"
+        verbose_name_plural = "通知"
+
+    def __str__(self):
+        return f"{self.user_id}:{self.title}"
