@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -7,6 +8,7 @@ import 'package:logger/logger.dart';
 
 import '../config/app_config.dart';
 import '../errors/app_exception.dart';
+import '../files/safe_filename.dart';
 import '../storage/token_storage.dart';
 import 'api_endpoints.dart';
 
@@ -25,6 +27,18 @@ class ApiDownload {
 
   final Uint8List bytes;
   final String filename;
+}
+
+class ApiFileDownload {
+  const ApiFileDownload({
+    required this.bytes,
+    required this.filename,
+    required this.mimeType,
+  });
+
+  final Uint8List bytes;
+  final String filename;
+  final String mimeType;
 }
 
 class ApiClient {
@@ -104,6 +118,10 @@ class ApiClient {
       }
       options.headers['Authorization'] = 'Bearer $accessToken';
       options.extra[_retriedAfterRefreshKey] = true;
+      final requestData = options.data;
+      if (requestData is FormData) {
+        options.data = requestData.clone();
+      }
       handler.resolve(await _dio.fetch<dynamic>(options));
     } on AppException catch (refreshError) {
       handler.reject(
@@ -214,6 +232,30 @@ class ApiClient {
     String path, {
     Map<String, dynamic>? queryParameters,
   }) async {
+    final download = await downloadFile(
+      path,
+      queryParameters: queryParameters,
+      fallbackFilename: 'audit-events.csv',
+      allowedExtensions: const {'csv'},
+    );
+    return ApiDownload(bytes: download.bytes, filename: download.filename);
+  }
+
+  Future<ApiFileDownload> downloadFile(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    required String fallbackFilename,
+    required Set<String> allowedExtensions,
+  }) async {
+    final normalizedExtensions = allowedExtensions
+        .map((extension) => extension.toLowerCase())
+        .toSet();
+    if (!SafeFilenamePolicy.isSafe(
+      fallbackFilename,
+      allowedExtensions: normalizedExtensions,
+    )) {
+      throw const AppException.protocol('invalid fallback filename');
+    }
     try {
       final response = await _dio.get<List<int>>(
         path,
@@ -225,16 +267,85 @@ class ApiClient {
         throw const AppException.protocol('empty download response');
       }
       final disposition = response.headers.value('content-disposition') ?? '';
-      final match = RegExp(r'filename="?([^";]+)').firstMatch(disposition);
-      final candidate = match?.group(1) ?? 'audit-events.csv';
-      final filename = RegExp(r'^[A-Za-z0-9._-]+[.]csv$').hasMatch(candidate)
-          ? candidate
-          : 'audit-events.csv';
-      return ApiDownload(bytes: Uint8List.fromList(data), filename: filename);
+      final filename =
+          _filenameFromDisposition(disposition, normalizedExtensions) ??
+          fallbackFilename;
+      final contentType = response.headers.value(Headers.contentTypeHeader);
+      final mimeType = contentType?.split(';').first.trim().toLowerCase();
+      return ApiFileDownload(
+        bytes: Uint8List.fromList(data),
+        filename: filename,
+        mimeType: mimeType == null || mimeType.isEmpty
+            ? 'application/octet-stream'
+            : mimeType,
+      );
     } on DioException catch (error) {
       throw _mapDioException(path, error);
     }
   }
+
+  String? _filenameFromDisposition(
+    String disposition,
+    Set<String> allowedExtensions,
+  ) {
+    final extended = _dispositionParameter(disposition, 'filename*');
+    final decoded = extended == null ? null : _decodeRfc5987(extended);
+    if (decoded != null &&
+        SafeFilenamePolicy.isSafe(
+          decoded,
+          allowedExtensions: allowedExtensions,
+        )) {
+      return decoded;
+    }
+
+    final plain = _dispositionParameter(disposition, 'filename');
+    if (plain != null &&
+        SafeFilenamePolicy.isSafe(
+          plain,
+          allowedExtensions: allowedExtensions,
+        )) {
+      return plain;
+    }
+    return null;
+  }
+
+  String? _dispositionParameter(String disposition, String name) {
+    final match = RegExp(
+      '(?:^|;)\\s*${RegExp.escape(name)}\\s*=\\s*'
+      '(?:"([^"]*)"|([^;]*))',
+      caseSensitive: false,
+    ).firstMatch(disposition);
+    return (match?.group(1) ?? match?.group(2))?.trim();
+  }
+
+  String? _decodeRfc5987(String value) {
+    final match = RegExp(r"^([^']*)'([^']*)'(.*)$").firstMatch(value);
+    if (match == null || match.group(1)!.toLowerCase() != 'utf-8') {
+      return null;
+    }
+    final encoded = match.group(3)!;
+    for (var index = 0; index < encoded.length; index += 1) {
+      if (encoded.codeUnitAt(index) != 0x25) {
+        continue;
+      }
+      if (index + 2 >= encoded.length ||
+          !_isHexDigit(encoded.codeUnitAt(index + 1)) ||
+          !_isHexDigit(encoded.codeUnitAt(index + 2))) {
+        return null;
+      }
+      index += 2;
+    }
+    try {
+      return Uri.decodeComponent(encoded);
+    } on FormatException {
+      return null;
+    }
+  }
+
+  bool _isHexDigit(int codeUnit) =>
+      (codeUnit >= 0x30 && codeUnit <= 0x39) ||
+      (codeUnit >= 0x41 && codeUnit <= 0x46) ||
+      (codeUnit >= 0x61 && codeUnit <= 0x66);
 
   Future<Map<String, dynamic>> postMap(
     String path, {
@@ -286,6 +397,14 @@ class ApiClient {
     }
   }
 
+  Future<void> deleteVoid(String path) async {
+    try {
+      await _dio.delete<void>(path);
+    } on DioException catch (error) {
+      throw _mapDioException(path, error);
+    }
+  }
+
   AppException _mapDioException(String path, DioException error) {
     _logger.w(
       'API request failed: path=$path type=${error.type.name} '
@@ -299,6 +418,7 @@ class ApiClient {
       400 => AppException.validation(_safeErrorCode(error.response?.data)),
       401 => const AppException.unauthorized('authentication required'),
       403 => const AppException.forbidden('permission denied'),
+      404 => AppException.validation(_safeErrorCode(error.response?.data)),
       409 => AppException.conflict(_safeErrorCode(error.response?.data)),
       503 => const AppException.protocol('service unavailable'),
       _ => const AppException.network('request failed'),
@@ -308,6 +428,13 @@ class ApiClient {
   String _safeErrorCode(Object? payload) {
     if (payload case {'code': final String code}) {
       return code;
+    }
+    if (payload is List<int> && payload.length <= 64 * 1024) {
+      try {
+        return _safeErrorCode(jsonDecode(utf8.decode(payload)));
+      } on FormatException {
+        return 'conflict';
+      }
     }
     return 'conflict';
   }

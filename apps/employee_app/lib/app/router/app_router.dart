@@ -12,6 +12,8 @@ import '../../features/account_security/presentation/session_list_page.dart';
 import '../../features/accounts/presentation/account_detail_page.dart';
 import '../../features/accounts/presentation/account_list_page.dart';
 import '../../features/accounts/presentation/invitation_form_page.dart';
+import '../../features/attachments/presentation/attachment_page.dart';
+import '../../features/attachments/presentation/attachment_upload_page.dart';
 import '../../features/audit/presentation/audit_page.dart';
 import '../../features/authentication/presentation/auth_controller.dart';
 import '../../features/authentication/presentation/auth_session_store.dart';
@@ -65,6 +67,15 @@ GoRouter createAppRouter(
       final capabilities = sessionStore.capabilities;
       if ((location == '/employees/new' || location.endsWith('/edit')) &&
           !capabilities.canManageEmployees) {
+        return '/employees';
+      }
+      if (location.endsWith('/attachments/upload') &&
+          !capabilities.canManageEmployees) {
+        return '/employees';
+      }
+      if (location.endsWith('/attachments') &&
+          !capabilities.canManageEmployees &&
+          state.pathParameters['id'] != sessionStore.employeeId) {
         return '/employees';
       }
       if (location == '/departments/manage' &&
@@ -135,6 +146,16 @@ GoRouter createAppRouter(
             path: '/employees/:id/edit',
             builder: (context, state) =>
                 EmployeeFormPage(employeeId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/employees/:id/attachments/upload',
+            builder: (context, state) =>
+                AttachmentUploadPage(employeeId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/employees/:id/attachments',
+            builder: (context, state) =>
+                AttachmentPage(employeeId: state.pathParameters['id']!),
           ),
           GoRoute(
             path: '/employees/:id',

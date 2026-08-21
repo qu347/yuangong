@@ -70,3 +70,21 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+tasks.register<JavaExec>("attachmentSaverContractTest") {
+    group = "verification"
+    description = "Runs dependency-free native attachment saver lifecycle contracts."
+    dependsOn("compileDebugUnitTestKotlin")
+    mainClass.set(
+        "com.yourcompany.employee_app.AttachmentWriteLifecycleContract",
+    )
+    doFirst {
+        classpath =
+            files(tasks.named("compileDebugKotlin").get().outputs.files) +
+            tasks.named<Test>("testDebugUnitTest").get().classpath
+    }
+}
+
+tasks.matching { it.name == "assembleDebug" }.configureEach {
+    dependsOn("attachmentSaverContractTest")
+}

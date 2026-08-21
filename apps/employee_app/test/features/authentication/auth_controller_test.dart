@@ -70,6 +70,20 @@ ProviderContainer createContainer(
 }
 
 void main() {
+  test('session store owns and clears the authenticated employee id', () {
+    final store = AuthSessionStore();
+
+    store.markAuthenticated(testUser);
+    expect(store.employeeId, testUser.employeeId);
+
+    store.markLoading();
+    expect(store.employeeId, isNull);
+
+    store.markAuthenticated(testUser);
+    store.markUnauthenticated();
+    expect(store.employeeId, isNull);
+  });
+
   test(
     'successful login publishes the user and authenticated route state',
     () async {

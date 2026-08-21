@@ -1,4 +1,7 @@
 import 'package:employee_app/core/errors/failure.dart';
+import 'package:employee_app/features/attachments/presentation/employee_attachment_section.dart';
+import 'package:employee_app/features/authentication/data/current_user.dart';
+import 'package:employee_app/features/authentication/presentation/auth_session_store.dart';
 import 'package:employee_app/features/employees/data/employee.dart';
 import 'package:employee_app/features/employees/data/employee_page.dart';
 import 'package:employee_app/features/employees/data/employee_repository.dart';
@@ -61,9 +64,38 @@ class DetailEmployeeRepository extends EmployeeRepository {
   }) => throw UnimplementedError();
 }
 
-Widget detailHarness(DetailEmployeeRepository repository) {
+Widget detailHarness(
+  DetailEmployeeRepository repository, {
+  String? currentEmployeeId,
+  bool canManage = false,
+}) {
+  final store = AuthSessionStore();
+  store.markAuthenticated(
+    CurrentUser(
+      id: 'user-id',
+      username: canManage ? 'hr.manager' : 'employee.viewer',
+      displayName: canManage ? '人事管理员' : '员工',
+      employeeId: currentEmployeeId,
+      employeeNo: currentEmployeeId == null ? null : 'EMP-0001',
+      department: null,
+      roles: [canManage ? 'hr_admin' : 'employee'],
+      capabilities: canManage
+          ? const UserCapabilities(
+              canManageEmployees: true,
+              canManageDepartments: true,
+              canManagePositions: true,
+              canViewAudit: true,
+              canLogoutAll: true,
+            )
+          : const UserCapabilities.none(),
+    ),
+  );
   return ProviderScope(
-    overrides: [employeeRepositoryProvider.overrideWithValue(repository)],
+    overrides: [
+      employeeRepositoryProvider.overrideWithValue(repository),
+      authSessionStoreProvider.overrideWithValue(store),
+      currentEmployeeIdProvider.overrideWithValue(currentEmployeeId),
+    ],
     child: const MaterialApp(
       home: Scaffold(
         body: EmployeeDetailPage(
@@ -168,5 +200,41 @@ void main() {
 
     expect(find.text('林知远'), findsWidgets);
     expect(repository.requestCount, 2);
+  });
+
+  testWidgets('employee self sees the attachment section', (tester) async {
+    final repository = DetailEmployeeRepository(detailEmployee);
+
+    await tester.pumpWidget(
+      detailHarness(repository, currentEmployeeId: detailEmployee.id),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('员工附件'), findsOneWidget);
+  });
+
+  testWidgets('employee viewing another profile sees no attachment section', (
+    tester,
+  ) async {
+    final repository = DetailEmployeeRepository(detailEmployee);
+
+    await tester.pumpWidget(
+      detailHarness(
+        repository,
+        currentEmployeeId: '20000000-0000-0000-0000-000000000999',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('员工附件'), findsNothing);
+  });
+
+  testWidgets('employee manager sees the attachment section', (tester) async {
+    final repository = DetailEmployeeRepository(detailEmployee);
+
+    await tester.pumpWidget(detailHarness(repository, canManage: true));
+    await tester.pumpAndSettle();
+
+    expect(find.text('员工附件'), findsOneWidget);
   });
 }

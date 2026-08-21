@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/errors/failure.dart';
 import '../../../core/widgets/app_error_view.dart';
 import '../../../core/widgets/app_loading_view.dart';
+import '../../attachments/presentation/employee_attachment_section.dart';
 import '../../authentication/presentation/auth_session_store.dart';
 import '../data/employee.dart';
 import 'employee_management_controller.dart';
@@ -21,6 +22,8 @@ class EmployeeDetailPage extends ConsumerWidget {
         .watch(authSessionStoreProvider)
         .capabilities
         .canManageEmployees;
+    final currentEmployeeId = ref.watch(currentEmployeeIdProvider);
+    final canViewAttachments = canManage || currentEmployeeId == employeeId;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -104,6 +107,10 @@ class EmployeeDetailPage extends ConsumerWidget {
                         const SizedBox(height: 12),
                       ],
                       _EmployeeDetailCard(employee: value),
+                      if (canViewAttachments) ...[
+                        const SizedBox(height: 16),
+                        EmployeeAttachmentSection(employeeId: value.id),
+                      ],
                     ],
                   ),
                 ),

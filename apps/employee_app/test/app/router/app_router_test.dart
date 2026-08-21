@@ -2,6 +2,10 @@ import 'dart:async';
 
 import 'package:employee_app/app/router/app_router.dart';
 import 'package:employee_app/core/config/app_config.dart';
+import 'package:employee_app/core/network/api_client.dart';
+import 'package:employee_app/features/attachments/data/attachment.dart'
+    as attachment_data;
+import 'package:employee_app/features/attachments/data/attachment_repository.dart';
 import 'package:employee_app/features/authentication/data/auth_repository.dart';
 import 'package:employee_app/features/authentication/data/current_user.dart';
 import 'package:employee_app/features/authentication/presentation/auth_session_store.dart';
@@ -59,6 +63,36 @@ class RouterEmployeeRepository extends EmployeeRepository {
       const EmployeePage(count: 0, next: null, previous: null, results: []);
 }
 
+class RouterAttachmentRepository implements AttachmentRepository {
+  @override
+  Future<attachment_data.AttachmentPage> fetchAttachments(
+    String employeeId, {
+    int page = 1,
+    int pageSize = 20,
+  }) async => const attachment_data.AttachmentPage(
+    count: 0,
+    next: null,
+    previous: null,
+    results: [],
+  );
+
+  @override
+  Future<void> deleteAttachment(String attachmentId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<ApiFileDownload> downloadAttachment(
+    String attachmentId, {
+    required String fileType,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<attachment_data.EmployeeAttachment> uploadAttachment(
+    String employeeId,
+    attachment_data.AttachmentUploadCandidate candidate,
+  ) => throw UnimplementedError();
+}
+
 class RouterDepartmentRepository extends DepartmentRepository {
   @override
   Future<List<Department>> fetchDepartments() async => const [];
@@ -98,6 +132,9 @@ Widget routerApp({
       authSessionStoreProvider.overrideWithValue(store),
       authRepositoryProvider.overrideWithValue(repository),
       employeeRepositoryProvider.overrideWithValue(RouterEmployeeRepository()),
+      attachmentRepositoryProvider.overrideWithValue(
+        RouterAttachmentRepository(),
+      ),
       departmentRepositoryProvider.overrideWithValue(
         RouterDepartmentRepository(),
       ),
@@ -341,6 +378,128 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('审计日志'), findsOneWidget);
+  });
+
+  testWidgets('allows an employee self attachment deep link', (tester) async {
+    const user = CurrentUser(
+      id: '00000000-0000-0000-0000-000000000101',
+      username: 'employee.self',
+      displayName: '员工本人',
+      employeeId: '00000000-0000-0000-0000-000000000201',
+      employeeNo: 'EMP-0001',
+      department: null,
+      roles: ['employee'],
+    );
+    final store = AuthSessionStore()..markAuthenticated(user);
+    final repository = RouterAuthRepository();
+    addTearDown(repository.close);
+
+    await tester.pumpWidget(
+      routerApp(
+        store: store,
+        repository: repository,
+        initialLocation:
+            '/employees/00000000-0000-0000-0000-000000000201/attachments',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('员工附件'), findsOneWidget);
+    expect(find.text('上传附件'), findsNothing);
+  });
+
+  testWidgets('redirects an employee away from another employee attachments', (
+    tester,
+  ) async {
+    const user = CurrentUser(
+      id: '00000000-0000-0000-0000-000000000101',
+      username: 'employee.self',
+      displayName: '员工本人',
+      employeeId: '00000000-0000-0000-0000-000000000201',
+      employeeNo: 'EMP-0001',
+      department: null,
+      roles: ['employee'],
+    );
+    final store = AuthSessionStore()..markAuthenticated(user);
+    final repository = RouterAuthRepository();
+    addTearDown(repository.close);
+
+    await tester.pumpWidget(
+      routerApp(
+        store: store,
+        repository: repository,
+        initialLocation:
+            '/employees/00000000-0000-0000-0000-000000000999/attachments',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('员工目录'), findsOneWidget);
+    expect(find.text('员工附件'), findsNothing);
+  });
+
+  testWidgets('allows manager attachment upload route', (tester) async {
+    const user = CurrentUser(
+      id: '00000000-0000-0000-0000-000000000101',
+      username: 'hr.manager',
+      displayName: '人事管理员',
+      employeeId: null,
+      employeeNo: null,
+      department: null,
+      roles: ['hr_admin'],
+      capabilities: UserCapabilities(
+        canManageEmployees: true,
+        canManageDepartments: true,
+        canManagePositions: true,
+        canViewAudit: true,
+        canLogoutAll: true,
+      ),
+    );
+    final store = AuthSessionStore()..markAuthenticated(user);
+    final repository = RouterAuthRepository();
+    addTearDown(repository.close);
+
+    await tester.pumpWidget(
+      routerApp(
+        store: store,
+        repository: repository,
+        initialLocation:
+            '/employees/00000000-0000-0000-0000-000000000201/attachments/upload',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('上传员工附件'), findsOneWidget);
+  });
+
+  testWidgets('redirects employee self away from attachment upload route', (
+    tester,
+  ) async {
+    const user = CurrentUser(
+      id: '00000000-0000-0000-0000-000000000101',
+      username: 'employee.self',
+      displayName: '员工本人',
+      employeeId: '00000000-0000-0000-0000-000000000201',
+      employeeNo: 'EMP-0001',
+      department: null,
+      roles: ['employee'],
+    );
+    final store = AuthSessionStore()..markAuthenticated(user);
+    final repository = RouterAuthRepository();
+    addTearDown(repository.close);
+
+    await tester.pumpWidget(
+      routerApp(
+        store: store,
+        repository: repository,
+        initialLocation:
+            '/employees/00000000-0000-0000-0000-000000000201/attachments/upload',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('员工目录'), findsOneWidget);
+    expect(find.text('上传员工附件'), findsNothing);
   });
 
   testWidgets('redirects account admin deep link without account capability', (
