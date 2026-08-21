@@ -34,6 +34,32 @@
 
 审计导出默认最多 10000 行。超过上限返回 `400 / export_too_large`，details 只含 count/limit；成功响应为固定列 UTF-8 BOM CSV，公式危险前缀已中和。成功导出新增 `audit_exported`，只记录过滤摘要、格式与行数，不记录文件内容或完整查询字符串。
 
+## 员工附件
+
+- `GET /api/v1/employees/{employee_id}/attachments/`：返回 `count/next/previous/results` 分页；每项只含 `id`、`employee_id`、用户可见 `filename`、规范化 `file_type`、整数 `file_size`、上传者安全摘要和 `created_at`。客户端保留分页元数据并通过“加载更多”访问第 2 页及以后，跨页按 `-created_at, -id` 去重排序。
+- `POST /api/v1/employees/{employee_id}/attachments/`：只接受 `multipart/form-data` 的 `file` 字段，成功返回 201。客户端不得提交内部文件名、存储路径、employee 或 uploaded_by。
+- `GET /api/v1/attachments/{attachment_id}/download/`：返回授权后的流式二进制响应，设置安全 `Content-Disposition`、`Cache-Control: private, no-store` 和 `X-Content-Type-Options: nosniff`。
+- `DELETE /api/v1/attachments/{attachment_id}/`：只执行软删除并返回 204，不删除磁盘文件。
+
+允许 PDF、DOCX、XLSX、JPG/JPEG 和 PNG；JPEG 统一记录为 `jpg`。文件大小必须为 1 byte 至 10 MiB（含边界），扩展名和内容签名都由服务端验证。API 永不返回 `storage_path`、storage root 或绝对路径。
+
+权限和对象范围如下：employee 只能列表/下载自身 Employee profile 的未删除附件，不能上传或删除；hr_admin 可管理未关联 system_admin/超级用户的员工附件；system_admin/超级用户可管理全部员工附件。除 system_admin/超级用户外，列表和下载必须先具有 `view_employeeattachment`，`add`/`change` 不替代 `view`。缺少读取、上传或软删除动作权限返回 403；已具备相应动作权限但目标超出对象可见范围、已软删除或不存在时返回安全 404，以隐藏对象存在性。后端权限是最终权威。
+
+下载文件名策略只接受不含实际/解码后路径分隔符、控制/格式字符或响应头危险字符的 basename；basename 内部连续点不是路径穿越。响应文件名缺失或被拒绝时，客户端按响应元数据的规范 `file_type` 使用 `attachment.pdf/docx/xlsx/jpg/png`，保证 fallback 扩展名与 MIME 一致。
+
+稳定附件错误码：
+
+- `400 attachment_type_not_allowed`：扩展名不在白名单。
+- `400 attachment_too_large`：超过 10 MiB。
+- `400 attachment_invalid_content`：空文件、内容签名不匹配或非目标 OOXML ZIP。
+- `400 attachment_file_missing`：上传请求缺少 `file`。
+- `400 attachment_storage_conflict`：服务端生成路径在有限次数重试后仍冲突。
+- `404 attachment_file_missing`：元数据存在但物理文件缺失；响应不得暴露内部路径。
+
+Flutter 将 HTTP 400 的 `attachment_storage_conflict` 映射为“附件暂时无法保存，请重试。”，不把服务端存储条件误报为普通输入校验。
+
+附件列表使用 `select_related` 读取 employee/uploaded_by。合同测试证明 1 条和 20 条结果均为 3 次查询，不随附件数增长；附件区域独立加载，不向 10,000 员工目录查询附加附件预取。
+
 ## 分页
 
 员工列表使用 `page` 与 `page_size`，响应为 `count`、`next`、`previous`、`results`。默认页大小 20，最大 100，越界返回 400。

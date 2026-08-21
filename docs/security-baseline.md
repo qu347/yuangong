@@ -32,6 +32,13 @@
 - CSV 导出固定字段、UTF-8 BOM/CRLF、最多 10000 行，并对 `= + - @ Tab CR LF` 前缀增加单引号；成功导出自身写入 `audit_exported`。
 - 审计归档使用稳定 JSONL gzip、SHA-256 与 HMAC manifest。`AUDIT_RETENTION_DAYS=0` 表示无限期保留；本阶段没有 purge 命令或自动删除。
 - 目录业务 API 和 Admin 均不提供物理删除；Employee 状态与账号关联在 Admin 中只读。
+- 员工附件本体不进数据库、API JSON、日志或审计；数据库只保存安全元数据和相对于专用 storage root 的服务端生成路径。
+- 附件只允许 PDF、DOCX、XLSX、JPG/JPEG、PNG，单文件 1 byte 至 10 MiB；服务端同时校验扩展名与 PDF/图片签名或 OOXML 结构，客户端检查仅用于即时反馈。
+- 附件下载必须先检查 `view_employeeattachment`（system_admin/超级用户除外），再经过对象级可见范围，并使用流式响应、`nosniff` 与私有非缓存策略；缺动作权限返回 403，范围外、已删除和不存在对象返回安全 404。
+- 上传文件默认权限为 `0600`，目录默认权限为 `0700`。生产镜像以 UID/GID `10001`、mode `0700` 创建附件挂载根，容器以该非 root 身份运行；附件根不得位于仓库内或与审计归档目录共用。
+- 软删除只写 `deleted_at`，不物理删除文件；当前没有自动清理、在线恢复、病毒扫描或法定保留实现，存储容量、保留和恢复由运营方在正式部署前确定。
+- 附件创建/软删除审计只允许员工工号、清理后的文件名、规范类型和大小；禁止文件内容、multipart 数据、storage_path 或绝对路径。
+- Android 接受 `ACTION_CREATE_DOCUMENT` URI 后不得在 engine teardown 时中断写入；完成中的任务继续到成功或失败，teardown 后不回调 Dart，失败只对本次 document URI 做 best-effort delete。
 
 ## 网络
 

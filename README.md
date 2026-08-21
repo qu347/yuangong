@@ -1,6 +1,6 @@
 # 企业员工管理系统
 
-面向企业内部员工的 Windows 与 Android 管理客户端。当前已完成员工目录、HR 维护、RBAC/审计、账号与会话安全，以及受控审计导出、可验证归档、生产配置合同和内部试用构建验证；仍不包含考勤、审批、薪资等完整人力资源业务。
+面向企业内部员工的 Windows 与 Android 管理客户端。当前已完成员工目录、HR 维护、员工附件文件中心、RBAC/审计、账号与会话安全，以及受控审计导出、可验证归档、生产配置合同和内部试用构建验证；仍不包含考勤、审批、薪资等完整人力资源业务。
 
 ## 平台范围
 
@@ -34,8 +34,10 @@
 - 企业工作台聚合、HR 统计、12 层组织架构树、员工安全档案字段、员工/部门/岗位全局搜索和当前用户轻量通知。
 - HR/system 管理员可使用无第三方图表依赖的 HR 统计页面；组织树可查看部门成员；员工详情支持头像失败降级；搜索结果按员工、部门、岗位分组。
 - 幂等的 100 部门、500 岗位、10,000 员工虚构性能数据与搜索/分页/Dashboard 阈值验证。
+- Employee 自助查看/下载本人附件，HR/system 管理员按对象范围上传、下载和软删除 PDF、DOCX、XLSX、JPG/JPEG、PNG；单文件上限 10 MiB。
+- 附件使用专用本地私有存储、服务端 UUID 路径、内容签名校验、流式下载、审计和 Windows/Android 系统保存界面；不向 API 暴露存储路径。
 
-当前不包含考勤、审批、薪资、招聘、上传、多租户、MFA、外部 SSO 或生产邮件供应商。
+当前不包含考勤、审批、薪资、招聘、多租户、MFA、外部 SSO、生产邮件供应商、通用文件平台、外链分享、在线预览、病毒扫描或附件自动物理清理。
 
 ## 目录结构
 
@@ -108,6 +110,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\run-backend.ps1
 - `GET http://127.0.0.1:8000/api/v1/departments/tree/`
 - `GET http://127.0.0.1:8000/api/v1/search/?q=keyword`
 - `GET http://127.0.0.1:8000/api/v1/notifications/`
+- `GET/POST http://127.0.0.1:8000/api/v1/employees/{employee_id}/attachments/`
+- `GET http://127.0.0.1:8000/api/v1/attachments/{attachment_id}/download/`
+- `DELETE http://127.0.0.1:8000/api/v1/attachments/{attachment_id}/`
 - `GET http://127.0.0.1:8000/api/v1/audit-events/export.csv`
 - `GET http://127.0.0.1:8000/api/schema/`
 - `GET http://127.0.0.1:8000/api/docs/`
@@ -212,12 +217,14 @@ flutter build apk --debug --dart-define-from-file=../../config/dev.android-emula
 
 不要提交 `.env`、证书、私钥、Android keystore、`key.properties`、Token、数据库导出、真实员工数据或本地设备配置。`.gitignore` 已覆盖常见文件，但提交前仍需人工检查。
 
-生产变量、审计治理和内部试用构建分别见 [生产配置](docs/production-configuration.md)、[审计治理](docs/audit-governance.md) 和 [发布检查清单](docs/release-checklist.md)。第四阶段真实结果见 [内部试用准备验收报告](docs/internal-pilot-readiness-validation-report.md)。
+生产变量、附件存储、审计治理和内部试用构建分别见 [生产配置](docs/production-configuration.md)、[附件存储运维指南](docs/file-storage-guide.md)、[审计治理](docs/audit-governance.md) 和 [发布检查清单](docs/release-checklist.md)。第四阶段真实结果见 [内部试用准备验收报告](docs/internal-pilot-readiness-validation-report.md)。
 
 第五阶段产品能力决策见 [ADR-0008](docs/decisions/ADR-0008-product-enhancement.md)，自动化与双平台构建结果见 [第五阶段验收报告](docs/product-enhancement-validation-report.md)。
+
+第六阶段文件中心决策见 [ADR-0009](docs/decisions/ADR-0009-file-center.md)，本轮 SQLite/PostgreSQL、OpenAPI、存储与双平台结果见 [文件中心验收报告](docs/file-center-validation-report.md)。
 
 ## 下一步
 
 第四阶段已经具备内部试用交付的代码和本地验证基础，但正式身份、SMTP、Android/Windows 正式证书、审计法定保留期限、仓库 visibility 与 main 保护仍需公司决策和授权。
 
-下一阶段只考虑正式内测试点部署、SMTP 接入、正式签名、受控分发、备份恢复与监控告警。不要直接跳到考勤、审批或薪资。
+下一阶段只考虑正式内测试点部署、SMTP 接入、正式签名、受控分发、附件与数据库一致性备份恢复、监控告警。不要直接跳到考勤、审批或薪资。
