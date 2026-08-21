@@ -47,6 +47,7 @@ temp/
 docker-data/
 data/postgres/
 data/redis/
+/storage/
 
 # Editors and operating systems
 .idea/

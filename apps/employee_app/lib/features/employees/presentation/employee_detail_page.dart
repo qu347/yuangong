@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/errors/failure.dart';
 import '../../../core/widgets/app_error_view.dart';
 import '../../../core/widgets/app_loading_view.dart';
+import '../../attachments/presentation/employee_attachment_section.dart';
 import '../../authentication/presentation/auth_session_store.dart';
 import '../data/employee.dart';
 import 'employee_management_controller.dart';
@@ -21,6 +22,8 @@ class EmployeeDetailPage extends ConsumerWidget {
         .watch(authSessionStoreProvider)
         .capabilities
         .canManageEmployees;
+    final currentEmployeeId = ref.watch(currentEmployeeIdProvider);
+    final canViewAttachments = canManage || currentEmployeeId == employeeId;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -104,6 +107,10 @@ class EmployeeDetailPage extends ConsumerWidget {
                         const SizedBox(height: 12),
                       ],
                       _EmployeeDetailCard(employee: value),
+                      if (canViewAttachments) ...[
+                        const SizedBox(height: 16),
+                        EmployeeAttachmentSection(employeeId: value.id),
+                      ],
                     ],
                   ),
                 ),
@@ -184,12 +191,9 @@ class _EmployeeDetailCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  radius: 30,
-                  child: Text(
-                    employee.fullName.characters.first,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
+                EmployeeAvatar(
+                  fullName: employee.fullName,
+                  avatarUrl: employee.avatarUrl,
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -218,8 +222,78 @@ class _EmployeeDetailCard extends StatelessWidget {
             _DetailRow(label: '岗位', value: employee.position?.name ?? '未分配'),
             _DetailRow(label: '在职状态', value: employee.isActive ? '在职' : '离职'),
             _DetailRow(label: '入职日期', value: _formatDate(employee.hireDate)),
+            _DetailRow(
+              label: '办公地点',
+              value: employee.officeLocation.isEmpty
+                  ? '未填写'
+                  : employee.officeLocation,
+            ),
+            _DetailRow(
+              label: '直属负责人',
+              value: employee.manager?.fullName ?? '未分配',
+            ),
+            _DetailRow(
+              label: '档案说明',
+              value: employee.description.isEmpty
+                  ? '未填写'
+                  : employee.description,
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class EmployeeAvatar extends StatelessWidget {
+  const EmployeeAvatar({
+    required this.fullName,
+    required this.avatarUrl,
+    this.size = 60,
+    super.key,
+  });
+
+  final String fullName;
+  final String avatarUrl;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalizedUrl = avatarUrl.trim();
+    if (!normalizedUrl.toLowerCase().startsWith('https://')) {
+      return _AvatarFallback(fullName: fullName, size: size);
+    }
+    return Semantics(
+      label: '$fullName的员工头像',
+      image: true,
+      child: ClipOval(
+        child: Image.network(
+          normalizedUrl,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return _AvatarFallback(fullName: fullName, size: size);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _AvatarFallback extends StatelessWidget {
+  const _AvatarFallback({required this.fullName, required this.size});
+
+  final String fullName;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      radius: size / 2,
+      child: Text(
+        fullName.characters.first,
+        style: Theme.of(context).textTheme.titleLarge,
       ),
     );
   }

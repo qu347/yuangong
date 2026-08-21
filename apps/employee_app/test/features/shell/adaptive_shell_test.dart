@@ -24,6 +24,7 @@ void main() {
     );
 
     expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byKey(const Key('shell_search')), findsOneWidget);
     expect(find.byType(NavigationRail), findsNothing);
   });
 
@@ -48,6 +49,7 @@ void main() {
     );
 
     expect(find.byType(NavigationRail), findsOneWidget);
+    expect(find.byKey(const Key('shell_search')), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
   });
 

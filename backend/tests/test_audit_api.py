@@ -39,6 +39,30 @@ def test_audit_recorder_accepts_safe_changes_and_rejects_sensitive_keys():
 
 
 @pytest.mark.django_db
+def test_attachment_audit_actions_and_safe_metadata_are_supported():
+    from modules.audit.services import record_audit_event
+
+    actor = User.objects.create_user(username="attachment_auditor")
+    event = record_audit_event(
+        actor=actor,
+        action=AuditEvent.Action.EMPLOYEE_ATTACHMENT_CREATE,
+        resource_type="employee_attachment",
+        resource_id="00000000-0000-0000-0000-000000000901",
+        resource_label="合同.pdf",
+        changes={
+            "filename": {"to": "合同.pdf"},
+            "file_type": {"to": "pdf"},
+            "file_size": {"to": 1024},
+        },
+        source=AuditEvent.Source.API,
+    )
+
+    assert AuditEvent.Action.EMPLOYEE_ATTACHMENT_CREATE == "employee_attachment.create"
+    assert AuditEvent.Action.EMPLOYEE_ATTACHMENT_DELETE == "employee_attachment.delete"
+    assert event.action == "employee_attachment.create"
+
+
+@pytest.mark.django_db
 def test_audit_api_requires_view_permission_and_is_read_only():
     call_command("sync_rbac", verbosity=0)
     employee_user = User.objects.create_user(username="audit_employee")

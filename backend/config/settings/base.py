@@ -119,6 +119,15 @@ AUDIT_ARCHIVE_HMAC_KEYS = env.json(
     "AUDIT_ARCHIVE_HMAC_KEYS_JSON",
     default={"audit-archive-development-v1": "development-only-audit-archive-key-change-me"},
 )
+EMPLOYEE_ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024
+EMPLOYEE_ATTACHMENT_STORAGE_ROOT = Path(
+    env(
+        "EMPLOYEE_ATTACHMENT_STORAGE_ROOT",
+        default=str(PROJECT_ROOT / "storage" / "employee-attachments"),
+    )
+).resolve()
+FILE_UPLOAD_PERMISSIONS = 0o600
+FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o700
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

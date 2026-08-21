@@ -66,3 +66,32 @@ def test_sync_rbac_grants_management_permissions_without_delete_permissions():
     )
     assert ("audit", "export_auditevent") not in hr_permissions
     assert ("audit", "export_auditevent") in system_permissions
+
+
+@pytest.mark.django_db
+def test_attachment_roles_never_receive_physical_delete_permission():
+    call_command("sync_rbac", stdout=StringIO())
+
+    employee_permissions = set(
+        Group.objects.get(name="employee").permissions.values_list("codename", flat=True)
+    )
+    assert "view_employeeattachment" in employee_permissions
+    assert (
+        not {
+            "add_employeeattachment",
+            "change_employeeattachment",
+            "delete_employeeattachment",
+        }
+        & employee_permissions
+    )
+
+    for role in ("hr_admin", "system_admin"):
+        permissions = set(
+            Group.objects.get(name=role).permissions.values_list("codename", flat=True)
+        )
+        assert {
+            "view_employeeattachment",
+            "add_employeeattachment",
+            "change_employeeattachment",
+        } <= permissions
+        assert "delete_employeeattachment" not in permissions

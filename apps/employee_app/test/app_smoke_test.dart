@@ -3,6 +3,8 @@ import 'package:employee_app/core/config/app_config.dart';
 import 'package:employee_app/features/authentication/data/auth_repository.dart';
 import 'package:employee_app/features/authentication/data/current_user.dart';
 import 'package:employee_app/features/authentication/presentation/auth_session_store.dart';
+import 'package:employee_app/features/dashboard/data/dashboard_repository.dart';
+import 'package:employee_app/features/dashboard/data/dashboard_summary.dart';
 import 'package:employee_app/features/departments/data/department.dart';
 import 'package:employee_app/features/departments/data/department_repository.dart';
 import 'package:employee_app/features/employees/data/employee.dart';
@@ -64,8 +66,20 @@ class SmokeDepartmentRepository extends DepartmentRepository {
   Future<List<Department>> fetchDepartments() async => const [];
 }
 
+class SmokeDashboardRepository implements DashboardRepository {
+  @override
+  Future<DashboardSummary> fetchSummary() async => const DashboardSummary(
+    employeeTotal: 12,
+    activeEmployee: 11,
+    departedEmployee: 1,
+    departmentTotal: 4,
+    positionTotal: 6,
+    recentOperations: [],
+  );
+}
+
 void main() {
-  testWidgets('authenticated application starts on the employee directory', (
+  testWidgets('authenticated application starts on the enterprise dashboard', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -78,6 +92,9 @@ void main() {
           ),
           departmentRepositoryProvider.overrideWithValue(
             SmokeDepartmentRepository(),
+          ),
+          dashboardRepositoryProvider.overrideWithValue(
+            SmokeDashboardRepository(),
           ),
           appConfigProvider.overrideWithValue(
             const AppConfig(
@@ -99,7 +116,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('通讯录'), findsWidgets);
+    expect(find.text('企业工作台'), findsOneWidget);
     expect(find.text('企业员工管理系统'), findsOneWidget);
   });
 }

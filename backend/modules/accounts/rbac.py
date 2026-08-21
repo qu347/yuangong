@@ -7,6 +7,7 @@ ROLE_SYSTEM_ADMIN = "system_admin"
 
 EMPLOYEE_PERMISSION_KEYS = {
     ("employees", "view_employee"),
+    ("employees", "view_employeeattachment"),
     ("organizations", "view_department"),
     ("organizations", "view_position"),
 }
@@ -15,6 +16,8 @@ MANAGEMENT_PERMISSION_KEYS = EMPLOYEE_PERMISSION_KEYS | {
     ("audit", "view_auditevent"),
     ("employees", "add_employee"),
     ("employees", "change_employee"),
+    ("employees", "add_employeeattachment"),
+    ("employees", "change_employeeattachment"),
     ("organizations", "add_department"),
     ("organizations", "change_department"),
     ("organizations", "add_position"),

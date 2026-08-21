@@ -1,5 +1,10 @@
 abstract final class ApiEndpoints {
   static const health = 'health/';
+  static const dashboardSummary = 'dashboard/summary/';
+  static const hrStatistics = 'statistics/hr/';
+  static const globalSearch = 'search/';
+  static const departmentTree = 'departments/tree/';
+  static const notifications = 'notifications/';
   static const login = 'auth/login/';
   static const refresh = 'auth/refresh/';
   static const logout = 'auth/logout/';
@@ -18,4 +23,12 @@ abstract final class ApiEndpoints {
   static const revokeOtherSessions = 'auth/sessions/revoke-others/';
   static const accounts = 'accounts/';
   static const invitations = 'accounts/invitations/';
+
+  static String employeeAttachments(String employeeId) =>
+      '$employees$employeeId/attachments/';
+
+  static String attachment(String attachmentId) => 'attachments/$attachmentId/';
+
+  static String attachmentDownload(String attachmentId) =>
+      '${attachment(attachmentId)}download/';
 }

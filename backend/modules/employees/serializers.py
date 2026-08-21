@@ -12,6 +12,12 @@ class PositionSummarySerializer(serializers.Serializer):
     name = serializers.CharField(read_only=True)
 
 
+class ManagerSummarySerializer(serializers.Serializer):
+    id = serializers.UUIDField(read_only=True)
+    employee_no = serializers.CharField(read_only=True)
+    full_name = serializers.CharField(read_only=True)
+
+
 class EmployeeSerializer(serializers.ModelSerializer):
     department = DepartmentSummarySerializer(read_only=True)
     position = PositionSummarySerializer(read_only=True)
@@ -32,8 +38,18 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
 
 class EmployeeDetailSerializer(EmployeeSerializer):
+    manager = ManagerSummarySerializer(read_only=True)
+
     class Meta(EmployeeSerializer.Meta):
-        fields = EmployeeSerializer.Meta.fields + ("updated_at",)
+        fields = EmployeeSerializer.Meta.fields + (
+            "avatar_url",
+            "gender",
+            "birthday",
+            "office_location",
+            "manager",
+            "description",
+            "updated_at",
+        )
 
 
 class EmployeeWriteSerializer(serializers.ModelSerializer):
@@ -52,6 +68,12 @@ class EmployeeWriteSerializer(serializers.ModelSerializer):
             "position",
             "employment_status",
             "hire_date",
+            "avatar_url",
+            "gender",
+            "birthday",
+            "office_location",
+            "manager",
+            "description",
             "expected_updated_at",
         )
         read_only_fields = ("id", "employment_status")
