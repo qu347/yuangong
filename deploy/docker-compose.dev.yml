@@ -63,10 +63,12 @@ services:
       DJANGO_EMAIL_HOST: mailpit
       DJANGO_EMAIL_PORT: 1025
       DJANGO_DEFAULT_FROM_EMAIL: no-reply@example.invalid
+      EMPLOYEE_ATTACHMENT_STORAGE_ROOT: /data/employee-attachments
     ports:
       - "8000:8000"
     volumes:
       - ../backend:/app/backend
+      - attachment_data:/data/employee-attachments
     depends_on:
       db:
         condition: service_healthy
@@ -79,3 +81,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  attachment_data:

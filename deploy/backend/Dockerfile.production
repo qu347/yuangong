@@ -5,6 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 RUN groupadd --gid 10001 app \
     && useradd --uid 10001 --gid app --create-home --shell /usr/sbin/nologin app
+RUN install -d -m 0700 -o app -g app /data/employee-attachments
 
 WORKDIR /app
 COPY backend/requirements/base.txt /app/backend/requirements/base.txt

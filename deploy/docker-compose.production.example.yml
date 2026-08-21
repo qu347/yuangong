@@ -58,11 +58,14 @@ services:
       AUDIT_ARCHIVE_HMAC_ACTIVE_KID: ${AUDIT_ARCHIVE_HMAC_ACTIVE_KID:?required}
       AUDIT_ARCHIVE_HMAC_KEYS_JSON: ${AUDIT_ARCHIVE_HMAC_KEYS_JSON:?required}
       AUDIT_ARCHIVE_DIR: ${AUDIT_ARCHIVE_DIR:?required}
+      EMPLOYEE_ATTACHMENT_STORAGE_ROOT: /data/employee-attachments
       AUDIT_RETENTION_DAYS: ${AUDIT_RETENTION_DAYS:-0}
       AUDIT_EXPORT_MAX_ROWS: ${AUDIT_EXPORT_MAX_ROWS:-10000}
       DJANGO_TRUST_X_FORWARDED_PROTO: "true"
     ports:
       - "127.0.0.1:8000:8000"
+    volumes:
+      - attachment_data:/data/employee-attachments
     depends_on:
       db:
         condition: service_healthy
@@ -84,3 +87,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  attachment_data:

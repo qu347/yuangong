@@ -40,6 +40,7 @@ def test_seed_demo_data_is_idempotent_and_uses_only_fictional_directory_data(mon
         )
     ) == {
         ("employees", "view_employee"),
+        ("employees", "view_employeeattachment"),
         ("organizations", "view_department"),
         ("organizations", "view_position"),
     }
@@ -48,6 +49,9 @@ def test_seed_demo_data_is_idempotent_and_uses_only_fictional_directory_data(mon
         ("employees", "add_employee"),
         ("employees", "change_employee"),
         ("employees", "view_employee"),
+        ("employees", "add_employeeattachment"),
+        ("employees", "change_employeeattachment"),
+        ("employees", "view_employeeattachment"),
         ("organizations", "add_department"),
         ("organizations", "change_department"),
         ("organizations", "view_department"),

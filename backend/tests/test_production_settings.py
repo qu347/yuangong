@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 BACKEND_ROOT = os.path.dirname(os.path.dirname(__file__))
+REPOSITORY_ROOT = Path(BACKEND_ROOT).parent
 
 
 def minimal_environment():
@@ -54,6 +55,11 @@ def valid_production_environment():
                 Path("D:/EmployeeAuditArchives/ProductionContract")
                 if os.name == "nt"
                 else Path("/tmp/employee-audit-archives-contract")
+            ),
+            "EMPLOYEE_ATTACHMENT_STORAGE_ROOT": str(
+                Path("D:/EmployeeAttachmentStorage/ProductionContract")
+                if os.name == "nt"
+                else Path("/tmp/employee-attachment-storage-contract")
             ),
         }
     )
@@ -138,3 +144,33 @@ def test_invalid_production_contract_is_rejected_without_echoing_secrets(mutatio
         "EMAIL_HOST_PASSWORD",
     ):
         assert environment.get(secret_name, "not-present") not in combined
+
+
+def test_production_rejects_attachment_root_inside_repository():
+    environment = valid_production_environment()
+    environment["EMPLOYEE_ATTACHMENT_STORAGE_ROOT"] = str(REPOSITORY_ROOT / "storage")
+
+    result = run_production_import(environment)
+
+    assert result.returncode != 0
+    assert "outside the repository" in result.stderr
+
+
+def test_production_requires_attachment_root():
+    environment = valid_production_environment()
+    environment.pop("EMPLOYEE_ATTACHMENT_STORAGE_ROOT")
+
+    result = run_production_import(environment)
+
+    assert result.returncode != 0
+    assert "EMPLOYEE_ATTACHMENT_STORAGE_ROOT" in result.stderr
+
+
+def test_production_rejects_attachment_root_shared_with_audit_archives():
+    environment = valid_production_environment()
+    environment["EMPLOYEE_ATTACHMENT_STORAGE_ROOT"] = environment["AUDIT_ARCHIVE_DIR"]
+
+    result = run_production_import(environment)
+
+    assert result.returncode != 0
+    assert "must not share" in result.stderr

@@ -6,6 +6,8 @@ from django.db import models
 
 from modules.organizations.models import Department, Position
 
+from .attachments.models import EmployeeAttachment  # noqa: F401
+
 
 class Employee(models.Model):
     class EmploymentStatus(models.TextChoices):

@@ -119,6 +119,18 @@ if (
 ):
     invalid("AUDIT_ARCHIVE_DIR must be an absolute path outside the repository")
 
+attachment_storage_root = Path(env("EMPLOYEE_ATTACHMENT_STORAGE_ROOT"))
+if not attachment_storage_root.is_absolute():
+    invalid("EMPLOYEE_ATTACHMENT_STORAGE_ROOT must be an absolute path outside the repository")
+EMPLOYEE_ATTACHMENT_STORAGE_ROOT = attachment_storage_root.resolve()
+if (
+    EMPLOYEE_ATTACHMENT_STORAGE_ROOT == repository_root
+    or repository_root in EMPLOYEE_ATTACHMENT_STORAGE_ROOT.parents
+):
+    invalid("EMPLOYEE_ATTACHMENT_STORAGE_ROOT must be an absolute path outside the repository")
+if EMPLOYEE_ATTACHMENT_STORAGE_ROOT == AUDIT_ARCHIVE_DIR:
+    invalid("EMPLOYEE_ATTACHMENT_STORAGE_ROOT must not share AUDIT_ARCHIVE_DIR")
+
 SIMPLE_JWT["SIGNING_KEY"] = JWT_SIGNING_KEY  # noqa: F405
 API_DOCS_ENABLED = env.bool("DJANGO_API_DOCS_ENABLED", default=False)
 SECURE_SSL_REDIRECT = True

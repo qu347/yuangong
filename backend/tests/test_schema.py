@@ -153,3 +153,48 @@ def test_openapi_schema_documents_audit_export_filters_and_csv_response():
         "ordering",
     } <= {parameter["name"] for parameter in operation["parameters"]}
     assert "text/csv" in operation["responses"]["200"]["content"]
+
+
+@pytest.mark.django_db
+def test_openapi_schema_documents_attachment_list_download_and_delete_contracts():
+    schema = (
+        APIClient()
+        .get(
+            "/api/schema/",
+            HTTP_ACCEPT="application/vnd.oai.openapi+json",
+        )
+        .json()
+    )
+
+    list_path = "/api/v1/employees/{employee_id}/attachments/"
+    download_path = "/api/v1/attachments/{attachment_id}/download/"
+    detail_path = "/api/v1/attachments/{attachment_id}/"
+    assert {list_path, download_path, detail_path} <= set(schema["paths"])
+
+    listed = schema["paths"][list_path]["get"]["responses"]["200"]
+    listed_schema = listed["content"]["application/json"]["schema"]
+    listed_schema = schema["components"]["schemas"][
+        listed_schema["$ref"].removeprefix("#/components/schemas/")
+    ]
+    assert listed_schema["type"] == "object"
+    assert {"count", "next", "previous", "results"} <= set(listed_schema["properties"])
+    assert listed_schema["properties"]["results"]["items"] == {
+        "$ref": "#/components/schemas/EmployeeAttachment"
+    }
+
+    download = schema["paths"][download_path]["get"]["responses"]["200"]
+    expected_download_content_types = {
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "image/jpeg",
+        "image/png",
+    }
+    assert set(download["content"]) == expected_download_content_types
+    assert all(
+        media["schema"] == {"type": "string", "format": "binary"}
+        for media in download["content"].values()
+    )
+
+    deleted = schema["paths"][detail_path]["delete"]["responses"]["204"]
+    assert "content" not in deleted
