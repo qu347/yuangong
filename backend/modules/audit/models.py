@@ -38,6 +38,8 @@ class AuditEvent(models.Model):
         ACCOUNT_ACTIVATED = "account_activated", "账号恢复"
         ACCOUNT_ROLE_CHANGED = "account_role_changed", "账号角色变更"
         AUDIT_EXPORTED = "audit_exported", "审计导出"
+        EMPLOYEE_ATTACHMENT_CREATE = "employee_attachment.create", "员工附件创建"
+        EMPLOYEE_ATTACHMENT_DELETE = "employee_attachment.delete", "员工附件删除"
 
     class Source(models.TextChoices):
         API = "api", "API"

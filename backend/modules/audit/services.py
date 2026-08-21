@@ -2,6 +2,8 @@ from django.core.exceptions import ValidationError
 
 from .models import AuditEvent
 
+_RESOURCE_LABEL_MAX_LENGTH = AuditEvent._meta.get_field("resource_label").max_length
+
 SAFE_CHANGE_FIELDS = {
     "code",
     "name",
@@ -29,6 +31,9 @@ SAFE_CHANGE_FIELDS = {
     "filters",
     "row_count",
     "format",
+    "filename",
+    "file_type",
+    "file_size",
 }
 SENSITIVE_KEY_FRAGMENTS = {
     "authorization",
@@ -79,7 +84,7 @@ def record_audit_event(
         action=action,
         resource_type=str(resource_type),
         resource_id=str(resource_id),
-        resource_label=str(resource_label),
+        resource_label=str(resource_label)[:_RESOURCE_LABEL_MAX_LENGTH],
         changes=changes,
         source=source,
         request_id=request_id,
