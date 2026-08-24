@@ -15,7 +15,7 @@ SECURITY_POLICY = REPOSITORY_ROOT / "SECURITY.md"
 PR_TEMPLATE = REPOSITORY_ROOT / ".github" / "pull_request_template.md"
 GITHUB_GOVERNANCE = REPOSITORY_ROOT / "docs" / "github-governance.md"
 RELEASE_CHECKLIST = REPOSITORY_ROOT / "docs" / "release-checklist.md"
-CODEQL_ACTION_SHA = "faaa5d804fc648d0fdb28822a8e36cf7d0a6132c"
+CODEQL_ACTION_SHA = "ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd"
 
 
 def load_workflow():
@@ -45,7 +45,7 @@ def test_ci_pins_actions_and_required_tool_versions():
 
     for sha in (
         "11d5960a326750d5838078e36cf38b85af677262",
-        "a26af69be951a213d495a4c3e4e4022e16d87065",
+        "5fda3b95a4ea91299a34e894583c3862153e4b97",
         "b6effb05e454b25005698d916606bdc6ffcbf961",
         "1a449444c387b1966244ae4d4f8c696479add0b2",
     ):
