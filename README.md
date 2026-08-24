@@ -183,6 +183,15 @@ powershell -ExecutionPolicy Bypass -File .\scripts\run-flutter-android.ps1 `
 powershell -ExecutionPolicy Bypass -File .\scripts\check.ps1
 ```
 
+### 当前验证状态
+
+当前 `main` 的质量门禁覆盖：
+
+- Flutter 格式化、静态分析与测试，以及 Windows Debug 和 Android Debug 构建。
+- Ruff 格式化与 lint、Django 系统检查、迁移漂移、OpenAPI 和 Docker Compose 合同检查。
+- SQLite 与 PostgreSQL 完整测试、Redis 健康探测和仓库安全基线。
+- GitHub Actions CI 与 Python CodeQL；第三方 Action 使用完整提交 SHA 固定，CodeQL `init` 与 `analyze` 保持同一摘要。
+
 后端单独检查：
 
 ```powershell
@@ -225,6 +234,6 @@ flutter build apk --debug --dart-define-from-file=../../config/dev.android-emula
 
 ## 下一步
 
-第四阶段已经具备内部试用交付的代码和本地验证基础，但正式身份、SMTP、Android/Windows 正式证书、审计法定保留期限、仓库 visibility 与 main 保护仍需公司决策和授权。
+第六阶段完成后，当前代码已经具备内部试用交付、产品增强与员工文件中心的本地验证基础，但正式身份、SMTP、Android/Windows 正式证书、审计法定保留期限、仓库 visibility 与 main 保护仍需公司决策和授权。
 
 下一阶段只考虑正式内测试点部署、SMTP 接入、正式签名、受控分发、附件与数据库一致性备份恢复、监控告警。不要直接跳到考勤、审批或薪资。
