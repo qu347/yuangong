@@ -46,7 +46,7 @@ def test_ci_pins_actions_and_required_tool_versions():
     for sha in (
         "11d5960a326750d5838078e36cf38b85af677262",
         "a26af69be951a213d495a4c3e4e4022e16d87065",
-        "cf277c60eb25467037889841efdb72551f06f6c3",
+        "b6effb05e454b25005698d916606bdc6ffcbf961",
         "1a449444c387b1966244ae4d4f8c696479add0b2",
     ):
         assert f"@{sha}" in text
