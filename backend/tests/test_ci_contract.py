@@ -15,7 +15,7 @@ SECURITY_POLICY = REPOSITORY_ROOT / "SECURITY.md"
 PR_TEMPLATE = REPOSITORY_ROOT / ".github" / "pull_request_template.md"
 GITHUB_GOVERNANCE = REPOSITORY_ROOT / "docs" / "github-governance.md"
 RELEASE_CHECKLIST = REPOSITORY_ROOT / "docs" / "release-checklist.md"
-CODEQL_ACTION_SHA = "faaa5d804fc648d0fdb28822a8e36cf7d0a6132c"
+CODEQL_ACTION_SHA = "ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd"
 
 
 def load_workflow():
