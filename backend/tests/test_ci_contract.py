@@ -44,7 +44,7 @@ def test_ci_pins_actions_and_required_tool_versions():
     text = WORKFLOW.read_text(encoding="utf-8")
 
     for sha in (
-        "11d5960a326750d5838078e36cf38b85af677262",
+        "3d3c42e5aac5ba805825da76410c181273ba90b1",
         "a26af69be951a213d495a4c3e4e4022e16d87065",
         "cf277c60eb25467037889841efdb72551f06f6c3",
         "1a449444c387b1966244ae4d4f8c696479add0b2",
