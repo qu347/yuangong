@@ -4,6 +4,6 @@ djangorestframework-simplejwt==5.5.1
 django-environ>=0.12,<1
 django-cors-headers>=4.7,<5
 drf-spectacular>=0.28,<1
-psycopg[binary]>=3.2,<4
+psycopg[binary]>=3.3.4,<4
 redis>=6,<7
 gunicorn>=23,<24
